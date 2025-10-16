@@ -9,19 +9,25 @@ export const formatCurrency = (amount) => {
 };
 
 /**
- * Determines the raw progress status of a purchase item based on its status and due date.
+ * Determines the raw progress status of a purchase item based on its due date and status.
  * @param {object} item The purchase item object.
  * @returns {string} 'Complete', 'Late', or 'In Progress'.
  */
 export const getRawProgressStatus = (item) => {
     if (!item) return 'Error';
     if (item.status === 'Incoming') return 'Complete';
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    
     const dueDate = item.dueDate ? new Date(item.dueDate) : null;
     if (dueDate) {
+        // Adjust for timezone offset to compare dates correctly
         dueDate.setMinutes(dueDate.getMinutes() + dueDate.getTimezoneOffset());
     }
+
     if (dueDate && dueDate < today) return 'Late';
+    
     return 'In Progress';
 };
+

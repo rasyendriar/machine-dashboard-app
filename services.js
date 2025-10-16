@@ -17,7 +17,6 @@ const GOOGLE_API_KEY = "AIzaSyBcQyXp0ZgZ4zAfe3wQ8cLR3UUZxZwfJW8";
 const GOOGLE_CLIENT_ID = "936861896173-mjigkv1uq44j3ase7li4ganluuqjf2dk.apps.googleusercontent.com";
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 
-// --- NEW ---
 // PASTE THE FOLDER ID YOU COPIED FROM GOOGLE DRIVE HERE
 const SHARED_DRIVE_FOLDER_ID = "https://drive.google.com/drive/folders/1SUL4zcjEA18x9l7jzuarP2vsNS3FsOL_";
 
@@ -95,12 +94,10 @@ export const driveService = {
                 return reject(new Error("Google Drive authentication failed. Please allow pop-ups and try again."));
             }
 
-            // --- KEY CHANGE ---
-            // We now specify the shared folder as the 'parent' for the new file.
             const metadata = { 
                 name: `drawing_${Date.now()}_${file.name}`, 
                 mimeType: file.type,
-                parents: [SHARED_DRIVE_FOLDER_ID] // This tells Drive where to save the file
+                parents: [SHARED_DRIVE_FOLDER_ID] 
             };
             const form = new FormData();
             form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
@@ -133,5 +130,4 @@ export const driveService = {
         });
     }
 };
-
 

@@ -19,7 +19,7 @@ const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 
 // --- NEW ---
 // PASTE THE FOLDER ID YOU COPIED FROM GOOGLE DRIVE HERE
-const SHARED_DRIVE_FOLDER_ID = "PASTE_YOUR_FOLDER_ID_HERE";
+const SHARED_DRIVE_FOLDER_ID = "https://drive.google.com/drive/folders/1SUL4zcjEA18x9l7jzuarP2vsNS3FsOL_";
 
 
 // --- INITIALIZATION ---
@@ -133,4 +133,5 @@ export const driveService = {
         });
     }
 };
+
 

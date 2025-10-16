@@ -16,10 +16,7 @@ const firebaseConfig = {
 const GOOGLE_API_KEY = "AIzaSyBcQyXp0ZgZ4zAfe3wQ8cLR3UUZxZwfJW8";
 const GOOGLE_CLIENT_ID = "936861896173-mjigkv1uq44j3ase7li4ganluuqjf2dk.apps.googleusercontent.com";
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-
-// PASTE THE FOLDER ID YOU COPIED FROM GOOGLE DRIVE HERE
 const SHARED_DRIVE_FOLDER_ID = "https://drive.google.com/drive/folders/1SUL4zcjEA18x9l7jzuarP2vsNS3FsOL_";
-
 
 // --- INITIALIZATION ---
 const app = initializeApp(firebaseConfig);
@@ -128,21 +125,20 @@ export const driveService = {
         });
     },
     migrateFile: async (imageUrl) => {
+        // This is a potential CORS issue. A proxy server is the most reliable way.
+        // We are using a public CORS proxy for this client-side solution.
+        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
         try {
-            // Fetch the image from the old URL and get it as a Blob
-            const response = await fetch(imageUrl);
+            const response = await fetch(proxyUrl + imageUrl);
             if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
             const imageBlob = await response.blob();
             
-            // Create a unique name for the migrated file
             const fileName = `migrated_${Date.now()}_image.png`;
-
-            // Use the existing uploadFile function to upload the blob
             const newUrl = await driveService.uploadFile(imageBlob, fileName);
             return newUrl;
         } catch (error) {
             console.error(`Failed to migrate image from ${imageUrl}:`, error);
-            throw error; // Re-throw the error to be caught by the migration handler
+            throw error;
         }
     }
 };

@@ -16,7 +16,7 @@ const firebaseConfig = {
 const GOOGLE_API_KEY = "AIzaSyBcQyXp0ZgZ4zAfe3wQ8cLR3UUZxZwfJW8";
 const GOOGLE_CLIENT_ID = "936861896173-mjigkv1uq44j3ase7li4ganluuqjf2dk.apps.googleusercontent.com";
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-const SHARED_DRIVE_FOLDER_ID = "https://drive.google.com/drive/folders/1SUL4zcjEA18x9l7jzuarP2vsNS3FsOL_";
+const SHARED_DRIVE_FOLDER_ID = "https://drive.google.com/drive/folders/1SUL4zcjEA18x9l7jzuarP2vsNS3FsOL_?usp=sharing";
 
 // --- INITIALIZATION ---
 const app = initializeApp(firebaseConfig);
@@ -142,4 +142,5 @@ export const driveService = {
         }
     }
 };
+
 

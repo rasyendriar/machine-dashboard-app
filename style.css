@@ -87,7 +87,7 @@ html.dark .themed-file-button::file-selector-button:hover {
 /* Scrollbar styles */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--border-light); }
-html.dark ::webkit-scrollbar-track { background: #374151; }
+html.dark ::-webkit-scrollbar-track { background: #374151; }
 ::-webkit-scrollbar-thumb { background: #a8a29e; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #78716c; }
 html.dark ::-webkit-scrollbar-thumb { background: #4b5563; }
@@ -107,7 +107,6 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 html.dark .sticky-header th {
     background-color: var(--header-dark);
 }
-
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }

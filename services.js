@@ -53,7 +53,6 @@ export const firestoreService = {
 // --- GOOGLE DRIVE SERVICE ---
 export const driveService = {
     init: (onGapiLoaded, onGisLoaded) => {
-        // Dynamically load Google API scripts
         const gapiScript = document.createElement('script');
         gapiScript.src = 'https://apis.google.com/js/api.js';
         gapiScript.onload = () => gapi.load('client', onGapiLoaded);
@@ -74,60 +73,77 @@ export const driveService = {
         tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: GOOGLE_CLIENT_ID,
             scope: SCOPES,
-            callback: '', // defined dynamically
+            callback: '', 
         });
     },
-    uploadFile: (file) => {
+    uploadFile: (fileOrBlob, fileName) => {
         return new Promise(async (resolve, reject) => {
-            if (!tokenClient) {
-                return reject(new Error("Google API not initialized."));
-            }
+            if (!tokenClient) return reject(new Error("Google API not initialized."));
 
-            const tokenResponse = await new Promise((res, rej) => {
-                try {
+            try {
+                const tokenResponse = await new Promise((res, rej) => {
                     tokenClient.callback = (resp) => resp.error ? rej(resp) : res(resp);
-                    tokenClient.requestAccessToken({ prompt: '' }); 
-                } catch (err) { rej(err); }
-            });
+                    tokenClient.requestAccessToken({ prompt: '' });
+                });
 
-            if (!tokenResponse.access_token) {
-                return reject(new Error("Google Drive authentication failed. Please allow pop-ups and try again."));
+                if (!tokenResponse.access_token) {
+                    return reject(new Error("Google Drive authentication failed."));
+                }
+                
+                const metadata = {
+                    name: fileName || `drawing_${Date.now()}_${fileOrBlob.name}`,
+                    mimeType: fileOrBlob.type,
+                    parents: [SHARED_DRIVE_FOLDER_ID]
+                };
+                const form = new FormData();
+                form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+                form.append('file', fileOrBlob);
+
+                const uploadResponse = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                    method: 'POST',
+                    headers: new Headers({ 'Authorization': `Bearer ${tokenResponse.access_token}` }),
+                    body: form,
+                });
+
+                const fileData = await uploadResponse.json();
+                if (fileData.error) return reject(new Error(fileData.error.message));
+
+                await fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}/permissions`, {
+                    method: 'POST',
+                    headers: new Headers({ 'Authorization': `Bearer ${tokenResponse.access_token}`, 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ role: 'reader', type: 'anyone' }),
+                });
+
+                const linkResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}?fields=thumbnailLink`, {
+                    headers: new Headers({ 'Authorization': `Bearer ${tokenResponse.access_token}` }),
+                });
+                const linkData = await linkResponse.json();
+                
+                resolve(linkData.thumbnailLink.replace("s220", "s400"));
+
+            } catch (error) {
+                console.error("Upload/Auth Error:", error);
+                reject(error);
             }
-
-            const metadata = { 
-                name: `drawing_${Date.now()}_${file.name}`, 
-                mimeType: file.type,
-                parents: [SHARED_DRIVE_FOLDER_ID] 
-            };
-            const form = new FormData();
-            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-            form.append('file', file);
-
-            const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                method: 'POST',
-                headers: new Headers({ 'Authorization': `Bearer ${tokenResponse.access_token}` }),
-                body: form,
-            });
-
-            const fileData = await response.json();
-            if (fileData.error) {
-                return reject(new Error(fileData.error.message));
-            }
-
-            // Make file publicly readable
-            await fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}/permissions`, {
-                method: 'POST',
-                headers: new Headers({ 'Authorization': `Bearer ${tokenResponse.access_token}`, 'Content-Type': 'application/json' }),
-                body: JSON.stringify({ role: 'reader', type: 'anyone' }),
-            });
-
-            const linkResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}?fields=thumbnailLink`, {
-                headers: new Headers({ 'Authorization': `Bearer ${tokenResponse.access_token}` }),
-            });
-            const linkData = await linkResponse.json();
-
-            resolve(linkData.thumbnailLink.replace("s220", "s400"));
         });
+    },
+    migrateFile: async (imageUrl) => {
+        try {
+            // Fetch the image from the old URL and get it as a Blob
+            const response = await fetch(imageUrl);
+            if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
+            const imageBlob = await response.blob();
+            
+            // Create a unique name for the migrated file
+            const fileName = `migrated_${Date.now()}_image.png`;
+
+            // Use the existing uploadFile function to upload the blob
+            const newUrl = await driveService.uploadFile(imageBlob, fileName);
+            return newUrl;
+        } catch (error) {
+            console.error(`Failed to migrate image from ${imageUrl}:`, error);
+            throw error; // Re-throw the error to be caught by the migration handler
+        }
     }
 };
 

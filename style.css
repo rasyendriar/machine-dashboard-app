@@ -11,9 +11,9 @@ body {
     --text-secondary-light: #8d6e63;
     --border-light: #d7ccc8;
     --header-light: #efebe9;
-    --zebra-light: #efebe9; /* Adjusted for more visibility */
+    --zebra-light: #f5f3f1;
     --input-bg-light: #fff;
-    --input-border-light: #d1d5db; /* gray-300 */
+    --input-border-light: #d1d5db;
 }
 
 html.dark {
@@ -24,9 +24,9 @@ html.dark {
     --text-secondary-dark: #9ca3af;
     --border-dark: #374151;
     --header-dark: #374151;
-    --zebra-dark: #1f2937;
-    --input-bg-dark: #374151; /* gray-700 */
-    --input-border-dark: #4b5563; /* gray-600 */
+    --zebra-dark: #273142;
+    --input-bg-dark: #374151;
+    --input-border-dark: #4b5563;
 }
 
 /* --- THEMED UTILITY CLASSES --- */
@@ -87,7 +87,7 @@ html.dark .themed-file-button::file-selector-button:hover {
 /* Scrollbar styles */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--border-light); }
-html.dark ::-webkit-scrollbar-track { background: #374151; }
+html.dark ::webkit-scrollbar-track { background: #374151; }
 ::-webkit-scrollbar-thumb { background: #a8a29e; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #78716c; }
 html.dark ::-webkit-scrollbar-thumb { background: #4b5563; }
@@ -95,7 +95,19 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 
 .required-label::after { content: '*'; color: #ef4444; margin-left: 4px; }
 .table-container { max-height: 60vh; overflow-y: auto; }
-.sticky-header th { position: sticky; top: 0; z-index: 10; }
+
+/* --- THE FIX for Sticky Header --- */
+.sticky-header th { 
+    position: sticky; 
+    top: 0; 
+    z-index: 10; 
+    /* This ensures the header cells are opaque */
+    background-color: var(--header-light);
+}
+html.dark .sticky-header th {
+    background-color: var(--header-dark);
+}
+
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
@@ -115,5 +127,4 @@ body.is-admin .admin-only { display: block; }
 body.is-admin .admin-only-flex { display: flex; }
 body.is-admin .admin-only-grid { display: grid; }
 body.is-admin .admin-only-inline-flex { display: inline-flex; }
-
 

@@ -22,17 +22,16 @@
 </head>
 <body class="themed-bg themed-text-primary transition-colors duration-300">
 
-    <!-- Your existing HTML body content... -->
-    <!-- ... (All your divs, forms, tables, modals, etc.) ... -->
+    <!-- All of your existing HTML body content from your original file goes here -->
+    <!-- I am omitting it for brevity, but you should have the full login-section, app-section, modals, etc. -->
     <div id="login-section" class="min-h-screen flex items-center justify-center">
-        <!-- ... -->
+        <!-- ... Full login form HTML ... -->
     </div>
     <div id="app-section" class="container mx-auto p-4 sm:p-6 lg:p-8 hidden">
-        <!-- ... -->
+        <!-- ... Full app content HTML ... -->
     </div>
     <div id="toast-container"></div>
-    <!-- ... all your modals ... -->
-
+    <!-- ... All your modals ... -->
 
     <!-- External libraries that might be needed by your script -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
@@ -40,11 +39,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- Your scripts at the end, with defer -->
-    <!-- The 'defer' attribute is the key fix. It tells the browser to run the script only after the HTML is fully loaded. -->
-    <script type="module" src="utils.js" defer></script>
-    <script type="module" src="ui.js" defer></script>
-    <script type="module" src="services.js" defer></script>
+    <!-- Your main application script. It will import the others. -->
+    <!-- The defer attribute ensures it runs only after the HTML is parsed. -->
     <script type="module" src="script.js" defer></script>
 </body>
 </html>

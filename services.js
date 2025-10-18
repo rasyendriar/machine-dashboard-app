@@ -1,22 +1,35 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
-import { getFirestore, doc, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, collection, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, collection, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 // --- CONFIGURATION ---
+// IMPORTANT: DO NOT HARDCODE API KEYS IN YOUR CODE. 
+// These should be loaded from environment variables or a secure configuration file.
 const firebaseConfig = {
-    apiKey: "AIzaSyAeHlByuYsOB4TFOt55gkhL-beg7sjgyu8",
-    authDomain: "machine-dashboard-app.firebaseapp.com",
-    projectId: "machine-dashboard-app",
-    storageBucket: "machine-dashboard-app.firebasestorage.app",
-    messagingSenderId: "936861896173",
-    appId: "1:936861896173:web:c5e64f35604f84498c6be4",
-    measurementId: "G-DHCN7YGSTQ"
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
 };
 
-const GOOGLE_API_KEY = "AIzaSyBcQyXp0ZgZ4zAfe3wQ8cLR3UUZxZwfJW8";
-const GOOGLE_CLIENT_ID = "936861896173-mjigkv1uq44j3ase7li4ganluuqjf2dk.apps.googleusercontent.com";
+const GOOGLE_API_KEY = "YOUR_GOOGLE_API_KEY";
+const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID";
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-const SHARED_DRIVE_FOLDER_ID = "https://drive.google.com/drive/folders/1SUL4zcjEA18x9l7jzuarP2vsNS3FsOL_?usp=sharing";
+const SHARED_DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/YOUR_FOLDER_ID"; // Replace with your actual folder URL
+
+/**
+ * Extracts the Google Drive folder ID from a URL.
+ * @param {string} url The full Google Drive folder URL.
+ * @returns {string|null} The extracted folder ID or null if not found.
+ */
+function getFolderIdFromUrl(url) {
+    const match = url.match(/folders\/([a-zA-Z0-9_-]+)/);
+    return match ? match[1] : null;
+}
+
+const SHARED_DRIVE_FOLDER_ID = getFolderIdFromUrl(SHARED_DRIVE_FOLDER_URL);
 
 // --- INITIALIZATION ---
 const app = initializeApp(firebaseConfig);
@@ -76,6 +89,7 @@ export const driveService = {
     uploadFile: (fileOrBlob, fileName) => {
         return new Promise(async (resolve, reject) => {
             if (!tokenClient) return reject(new Error("Google API not initialized."));
+            if (!SHARED_DRIVE_FOLDER_ID) return reject(new Error("Invalid Google Drive folder URL."));
 
             try {
                 const tokenResponse = await new Promise((res, rej) => {
@@ -125,8 +139,9 @@ export const driveService = {
         });
     },
     migrateFile: async (imageUrl) => {
-        // This is a potential CORS issue. A proxy server is the most reliable way.
-        // We are using a public CORS proxy for this client-side solution.
+        // WARNING: Using a public CORS proxy is not secure or reliable for production.
+        // This is a temporary solution for client-side development.
+        // The recommended approach is a server-side function (e.g., Cloud Function) to handle the image fetching.
         const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
         try {
             const response = await fetch(proxyUrl + imageUrl);
@@ -142,5 +157,3 @@ export const driveService = {
         }
     }
 };
-
-

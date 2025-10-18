@@ -2,22 +2,15 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebas
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, collection, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-// --- CONFIGURATION ---
-// IMPORTANT: DO NOT HARDCODE API KEYS IN YOUR CODE. 
-// These should be loaded from environment variables or a secure configuration file.
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
-};
+// Step 1: Import your configuration
+import { firebaseConfig, googleApiConfig } from './config.js';
 
-const GOOGLE_API_KEY = "YOUR_GOOGLE_API_KEY";
-const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID";
+// --- CONFIGURATION ---
+// All secret keys are now loaded from the git-ignored config.js file.
+const GOOGLE_API_KEY = googleApiConfig.apiKey;
+const GOOGLE_CLIENT_ID = googleApiConfig.clientId;
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-const SHARED_DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/YOUR_FOLDER_ID"; // Replace with your actual folder URL
+const SHARED_DRIVE_FOLDER_URL = googleApiConfig.folderUrl;
 
 /**
  * Extracts the Google Drive folder ID from a URL.
@@ -157,3 +150,4 @@ export const driveService = {
         }
     }
 };
+

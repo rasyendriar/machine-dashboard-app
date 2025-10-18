@@ -84,7 +84,8 @@ html.dark .themed-file-button::file-selector-button:hover {
     background-color: var(--border-dark);
 }
 
-/* Scrollbar styles */
+/* --- SCROLLBAR STYLES --- */
+/* For Webkit browsers (Chrome, Safari) */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--border-light); }
 html.dark ::-webkit-scrollbar-track { background: #374151; }
@@ -92,6 +93,16 @@ html.dark ::-webkit-scrollbar-track { background: #374151; }
 ::-webkit-scrollbar-thumb:hover { background: #78716c; }
 html.dark ::-webkit-scrollbar-thumb { background: #4b5563; }
 html.dark ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+/* For Firefox */
+html {
+    scrollbar-width: thin;
+    scrollbar-color: #a8a29e var(--border-light);
+}
+html.dark {
+    scrollbar-color: #4b5563 #374151;
+}
+
 
 .required-label::after { content: '*'; color: #ef4444; margin-left: 4px; }
 .table-container { max-height: 60vh; overflow-y: auto; }
@@ -126,4 +137,3 @@ body.is-admin .admin-only { display: block; }
 body.is-admin .admin-only-flex { display: flex; }
 body.is-admin .admin-only-grid { display: grid; }
 body.is-admin .admin-only-inline-flex { display: inline-flex; }
-

@@ -74,7 +74,7 @@ function setupEventListeners() {
     ui.elements.projectFilter.addEventListener('change', () => ui.renderTable(state.purchases));
     
     // New Listeners for Migration and Export
-    ui.elements.migrateImagesBtn.addEventListener('click', handleImageMigration);
+    // ui.elements.migrateImagesBtn.addEventListener('click', handleImageMigration);
     ui.elements.closeMigrationModalBtn.addEventListener('click', () => ui.showMigrationModal(false));
     ui.elements.exportPdfBtn.addEventListener('click', () => ui.exportToPDF(state.purchases));
     ui.elements.exportXlsxBtn.addEventListener('click', () => ui.exportToXLSX(state.purchases));
@@ -135,7 +135,8 @@ async function handleImageMigration() {
         ui.updateMigrationProgress(i + 1, itemsToMigrate.length);
         
         try {
-            const newUrl = await driveService.migrateFile(item.drawingImgUrl);
+            // **PERUBAHAN DI SINI:** Panggil fungsi baru dan teruskan ID dokumen
+            const newUrl = await driveService.migrateImageViaFunction(item.drawingImgUrl, item.id);
             await firestoreService.updatePurchase(item.id, { drawingImgUrl: newUrl });
             successCount++;
         } catch (error) {
@@ -146,7 +147,7 @@ async function handleImageMigration() {
     
     ui.showMigrationResults(successCount, errorCount, errors);
 }
-
+// ...
 async function handleLogin(e) {
     e.preventDefault();
     const email = document.getElementById('username').value;
@@ -333,3 +334,4 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+

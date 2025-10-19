@@ -47,6 +47,7 @@ export const elements = {
     // Details Modal Elements
     detailsModal: document.getElementById('details-modal'),
     closeDetailsModalBtn: document.getElementById('close-details-modal'),
+    detailsDrawingImg: document.getElementById('details-drawing-img'), // <-- TAMBAHKAN BARIS INI
     // Migration Modal Elements
     migrateImagesBtn: document.getElementById('migrate-images-btn'),
     migrationModal: document.getElementById('migration-modal'),
@@ -484,7 +485,9 @@ export function checkDashboardVisibility() {
 }
 
 export function showDetailsModal(item) {
-    document.getElementById('details-drawing-img').src = item.drawingImgUrl || 'https://placehold.co/400x300/e0e7ff/3730a3?text=N/A';
+    // **PERBAIKAN:** Gunakan referensi dari objek elements untuk konsistensi
+    elements.detailsDrawingImg.src = item.drawingImgUrl || 'https://placehold.co/400x300/e0e7ff/3730a3?text=N/A';
+    
     document.getElementById('details-item-name').textContent = item.itemName || '-';
     document.getElementById('details-no-drawing').textContent = item.noDrawing || '-';
     document.getElementById('details-project-code').textContent = item.projectCode || '-';
@@ -509,4 +512,5 @@ export function showDetailsModal(item) {
     document.getElementById('details-total-price').textContent = formatCurrency((item.negotiatedQuotation || 0) * (item.quantity || 0));
     elements.detailsModal.classList.remove('hidden');
 }
+
 

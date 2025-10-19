@@ -29,6 +29,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 let tokenClient;
+let gapiToken = null; // NEW: Variable to cache the Google API token
 
 // --- AUTHENTICATION SERVICE ---
 export const authService = {
@@ -52,6 +53,34 @@ export const firestoreService = {
         return onSnapshot(q, callback);
     }
 };
+
+// --- NEW: Token Management Function ---
+/**
+ * Gets a valid Google API access token, refreshing it only when necessary.
+ * This prevents the user from being prompted on every single upload.
+ * @returns {Promise<string>} A promise that resolves with the access token.
+ */
+function getGapiToken() {
+    return new Promise((resolve, reject) => {
+        // If we have a valid token that hasn't expired, return it immediately.
+        if (gapiToken && gapiToken.expires_at > Date.now()) {
+            return resolve(gapiToken.access_token);
+        }
+
+        // If the token is missing or expired, request a new one.
+        tokenClient.callback = (resp) => {
+            if (resp.error) {
+                return reject(resp);
+            }
+            // Store the new token and calculate its expiry time (adding a 60s buffer).
+            gapiToken = resp;
+            gapiToken.expires_at = Date.now() + (parseInt(resp.expires_in, 10) - 60) * 1000;
+            resolve(gapiToken.access_token);
+        };
+        tokenClient.requestAccessToken({ prompt: '' });
+    });
+}
+
 
 // --- GOOGLE DRIVE SERVICE ---
 export const driveService = {
@@ -85,14 +114,8 @@ export const driveService = {
             if (!SHARED_DRIVE_FOLDER_ID) return reject(new Error("Invalid Google Drive folder URL."));
 
             try {
-                const tokenResponse = await new Promise((res, rej) => {
-                    tokenClient.callback = (resp) => resp.error ? rej(resp) : res(resp);
-                    tokenClient.requestAccessToken({ prompt: '' });
-                });
-
-                if (!tokenResponse.access_token) {
-                    return reject(new Error("Google Drive authentication failed."));
-                }
+                // MODIFICATION: Use the new token management function.
+                const accessToken = await getGapiToken();
                 
                 const metadata = {
                     name: fileName || `drawing_${Date.now()}_${fileOrBlob.name}`,
@@ -105,7 +128,7 @@ export const driveService = {
 
                 const uploadResponse = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
                     method: 'POST',
-                    headers: new Headers({ 'Authorization': `Bearer ${tokenResponse.access_token}` }),
+                    headers: new Headers({ 'Authorization': `Bearer ${accessToken}` }),
                     body: form,
                 });
 
@@ -114,42 +137,37 @@ export const driveService = {
 
                 await fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}/permissions`, {
                     method: 'POST',
-                    headers: new Headers({ 'Authorization': `Bearer ${tokenResponse.access_token}`, 'Content-Type': 'application/json' }),
+                    headers: new Headers({ 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ role: 'reader', type: 'anyone' }),
                 });
-
-                // FIX: The original code had a bug using an undefined `fileId` variable.
-                // This is corrected to use `fileData.id` from the upload response.
-                // The URL now uses `uc?export=view`, which is more reliable for direct embedding in <img> tags.
+                
                 const embeddableUrl = `https://drive.google.com/uc?export=view&id=${fileData.id}`;
                 
-                // Resolve the promise with the correct, permanent URL.
                 resolve(embeddableUrl);
 
             } catch (error) {
                 console.error("Upload/Auth Error:", error);
+                // If an auth error occurs, clear the cached token to force a refresh on the next attempt.
+                if (error && error.type === 'token') {
+                    gapiToken = null; 
+                }
                 reject(error);
             }
         });
     },
     migrateImageViaFunction: async (imageUrl) => {
-        // This Cloud Function acts as a secure proxy to fetch the old image data, bypassing CORS issues.
-        // The URL is constructed from your Firebase project ID ('machine-dashboard-app').
         const functionUrl = `https://us-central1-machine-dashboard-app.cloudfunctions.net/migrateImageProxy`;
         
         try {
-            // Call the cloud function with the old image URL
             const response = await fetch(`${functionUrl}?imageUrl=${encodeURIComponent(imageUrl)}`);
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`Cloud Function failed: ${response.status} ${errorText}`);
             }
 
-            // Get the image data as a blob
             const imageBlob = await response.blob();
             const fileName = `migrated_${Date.now()}_image.png`;
             
-            // Reuse the existing, working uploadFile function to save it to Drive
             const newUrl = await driveService.uploadFile(imageBlob, fileName);
             return newUrl;
 

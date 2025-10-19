@@ -13,6 +13,8 @@ export const elements = {
     get logoutBtn() { return document.getElementById('logout-btn'); },
     get loginError() { return document.getElementById('login-error'); },
     get form() { return document.getElementById('purchase-form'); },
+    // **FIX:** Added a direct reference to the form title element.
+    get formTitle() { return document.getElementById('form-title'); },
     get tableBody() { return document.getElementById('purchase-table-body'); },
     get editIdInput() { return document.getElementById('edit-id'); },
     get drawingImgInput() { return document.getElementById('drawing-img'); },
@@ -334,7 +336,8 @@ export function populateFormForEdit(item) {
     }
 
     elements.editIdInput.value = item.id;
-    elements.form.querySelector('#form-title').textContent = 'Edit Machine Purchase';
+    // **FIX:** Use the new direct reference to the form title.
+    elements.formTitle.textContent = 'Edit Machine Purchase';
     elements.submitBtnText.textContent = 'Update Item';
     document.getElementById('cancel-edit-btn').classList.remove('hidden');
     calculateTotal();
@@ -344,7 +347,8 @@ export function populateFormForEdit(item) {
 export function resetForm() {
     elements.form.reset();
     elements.editIdInput.value = '';
-    elements.form.querySelector('#form-title').textContent = 'Add New Machine Purchase';
+    // **FIX:** Use the new direct reference to the form title.
+    elements.formTitle.textContent = 'Add New Machine Purchase';
     elements.submitBtnText.textContent = 'Add Item';
     document.getElementById('cancel-edit-btn').classList.add('hidden');
     elements.drawingPreview.classList.add('hidden');
@@ -514,4 +518,3 @@ export function showDetailsModal(item) {
     document.getElementById('details-total-price').textContent = formatCurrency((item.negotiatedQuotation || 0) * (item.quantity || 0));
     elements.detailsModal.classList.remove('hidden');
 }
-

@@ -135,8 +135,8 @@ async function handleImageMigration() {
         ui.updateMigrationProgress(i + 1, itemsToMigrate.length);
         
         try {
-            // **PERUBAHAN DI SINI:** Panggil fungsi baru dan teruskan ID dokumen
-            const newUrl = await driveService.migrateImageViaFunction(item.drawingImgUrl, item.id);
+            // Call the new Cloud Function-based migration service
+            const newUrl = await driveService.migrateImageViaFunction(item.drawingImgUrl);
             await firestoreService.updatePurchase(item.id, { drawingImgUrl: newUrl });
             successCount++;
         } catch (error) {

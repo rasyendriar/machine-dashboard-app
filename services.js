@@ -29,7 +29,8 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 let tokenClient;
-let gapiToken = null; // NEW: Variable to cache the Google API token
+// **FIX:** Variable to cache the Google API token to prevent multiple logins.
+let gapiToken = null; 
 
 // --- AUTHENTICATION SERVICE ---
 export const authService = {
@@ -54,7 +55,7 @@ export const firestoreService = {
     }
 };
 
-// --- NEW: Token Management Function ---
+// --- **FIX:** NEW Token Management Function ---
 /**
  * Gets a valid Google API access token, refreshing it only when necessary.
  * This prevents the user from being prompted on every single upload.
@@ -77,6 +78,8 @@ function getGapiToken() {
             gapiToken.expires_at = Date.now() + (parseInt(resp.expires_in, 10) - 60) * 1000;
             resolve(gapiToken.access_token);
         };
+        // **FIX:** The 'prompt' parameter is key. An empty string attempts to get a token
+        // without user interaction if they've already granted permission.
         tokenClient.requestAccessToken({ prompt: '' });
     });
 }
@@ -105,7 +108,7 @@ export const driveService = {
         tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: GOOGLE_CLIENT_ID,
             scope: SCOPES,
-            callback: '', 
+            callback: '', // Callback is handled dynamically in getGapiToken
         });
     },
     uploadFile: (fileOrBlob, fileName) => {
@@ -114,7 +117,7 @@ export const driveService = {
             if (!SHARED_DRIVE_FOLDER_ID) return reject(new Error("Invalid Google Drive folder URL."));
 
             try {
-                // MODIFICATION: Use the new token management function.
+                // **FIX:** Use the new token management function.
                 const accessToken = await getGapiToken();
                 
                 const metadata = {
@@ -147,8 +150,8 @@ export const driveService = {
 
             } catch (error) {
                 console.error("Upload/Auth Error:", error);
-                // If an auth error occurs, clear the cached token to force a refresh on the next attempt.
-                if (error && error.type === 'token') {
+                // **FIX:** If an auth error occurs, clear the cached token to force a refresh on the next attempt.
+                if (error && (error.type === 'token' || error.result?.error?.code === 401)) {
                     gapiToken = null; 
                 }
                 reject(error);
@@ -171,10 +174,10 @@ export const driveService = {
             const newUrl = await driveService.uploadFile(imageBlob, fileName);
             return newUrl;
 
-        } catch (error) {
+        } catch (error)
+        {
             console.error(`Failed to migrate image from ${imageUrl} via Cloud Function:`, error);
             throw error;
         }
     }
 };
-

@@ -132,22 +132,31 @@ export const driveService = {
             }
         });
     },
-    migrateFile: async (imageUrl) => {
-        // WARNING: Using a public CORS proxy is not secure or reliable for production.
-        // This is a temporary solution for client-side development.
-        // The recommended approach is a server-side function (e.g., Cloud Function) to handle the image fetching.
-        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+    migrateImageViaFunction: async (imageUrl) => {
+        // This Cloud Function acts as a secure proxy to fetch the old image data, bypassing CORS issues.
+        // The URL is constructed from your Firebase project ID ('machine-dashboard-app').
+        const functionUrl = `https://us-central1-machine-dashboard-app.cloudfunctions.net/migrateImageProxy`;
+        
         try {
-            const response = await fetch(proxyUrl + imageUrl);
-            if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
+            // Call the cloud function with the old image URL
+            const response = await fetch(`${functionUrl}?imageUrl=${encodeURIComponent(imageUrl)}`);
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Cloud Function failed: ${response.status} ${errorText}`);
+            }
+
+            // Get the image data as a blob
             const imageBlob = await response.blob();
-            
             const fileName = `migrated_${Date.now()}_image.png`;
+            
+            // Reuse the existing, working uploadFile function to save it to Drive
             const newUrl = await driveService.uploadFile(imageBlob, fileName);
             return newUrl;
+
         } catch (error) {
-            console.error(`Failed to migrate image from ${imageUrl}:`, error);
+            console.error(`Failed to migrate image from ${imageUrl} via Cloud Function:`, error);
             throw error;
         }
     }
 };
+

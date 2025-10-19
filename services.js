@@ -118,12 +118,12 @@ export const driveService = {
                     body: JSON.stringify({ role: 'reader', type: 'anyone' }),
                 });
 
-                const linkResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}?fields=thumbnailLink`, {
-                    headers: new Headers({ 'Authorization': `Bearer ${tokenResponse.access_token}` }),
-                });
-                const linkData = await linkResponse.json();
-                
-                resolve(linkData.thumbnailLink.replace("s220", "s400"));
+                //const linkResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}?fields=thumbnailLink`, {
+                //    headers: new Headers({ 'Authorization': `Bearer ${tokenResponse.access_token}` }),
+                //});
+                //const linkData = await linkResponse.json();
+                const reliableUrl = `https://drive.google.com/uc?id=${fileId}`;
+                resolve(reliableUrl);
 
             } catch (error) {
                 console.error("Upload/Auth Error:", error);
@@ -150,4 +150,5 @@ export const driveService = {
         }
     }
 };
+
 

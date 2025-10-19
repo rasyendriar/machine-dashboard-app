@@ -118,12 +118,13 @@ export const driveService = {
                     body: JSON.stringify({ role: 'reader', type: 'anyone' }),
                 });
 
-                //const linkResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}?fields=thumbnailLink`, {
-                //    headers: new Headers({ 'Authorization': `Bearer ${tokenResponse.access_token}` }),
-                //});
-                //const linkData = await linkResponse.json();
-                const reliableUrl = `https://drive.google.com/uc?id=${fileId}`;
-                resolve(reliableUrl);
+                // FIX: The original code had a bug using an undefined `fileId` variable.
+                // This is corrected to use `fileData.id` from the upload response.
+                // The URL now uses `uc?export=view`, which is more reliable for direct embedding in <img> tags.
+                const embeddableUrl = `https://drive.google.com/uc?export=view&id=${fileData.id}`;
+                
+                // Resolve the promise with the correct, permanent URL.
+                resolve(embeddableUrl);
 
             } catch (error) {
                 console.error("Upload/Auth Error:", error);
@@ -150,5 +151,3 @@ export const driveService = {
         }
     }
 };
-
-

@@ -102,7 +102,12 @@ export function showMigrationResults(successCount, errorCount, errors) {
 
 
 // --- EXPORTING LOGIC ---
-function getFilteredData(purchases) {
+function getFilteredData(purchases, fullReport = false) {
+    // If fullReport is false, it uses the UI filters.
+    // If true, it ignores UI filters and returns all data.
+    if (fullReport) {
+        return purchases;
+    }
     const searchTerm = elements.searchInput.value.toLowerCase();
     const selectedProject = elements.projectFilter.value;
     return purchases.filter(p =>
@@ -111,78 +116,174 @@ function getFilteredData(purchases) {
     );
 }
 
+/**
+ * NEW: Exports a full data backup to an XLSX file.
+ * This includes all fields for backup and data analysis purposes.
+ */
 export function exportToXLSX(purchases) {
-    const dataToExport = getFilteredData(purchases);
+    // For backup, we always want the full, unfiltered dataset.
+    const dataToExport = getFilteredData(purchases, true); 
     if (dataToExport.length === 0) {
         showToast("No data available to export.", "error");
         return;
     }
 
     const mappedData = dataToExport.map(p => ({
-        "Project": p.projectCode || '-',
+        "ID": p.id,
+        "Project Code": p.projectCode,
         "No. Drawing": p.noDrawing,
         "Item Name": p.itemName,
-        "PIC": p.machinePic || '-',
         "Quantity": p.quantity,
+        "Due Date": p.dueDate,
+        "Machine's PIC": p.machinePic,
+        "Purchasing Status": p.status,
         "Progress Status": getRawProgressStatus(p),
-        "Purchasing Status": p.status || 'N/A',
-        "Due Date": p.dueDate || '-',
-        "PO Number": p.poNumber || '-',
-        "PO Date": p.poDate || '-',
-        "Negotiated Quotation (IDR)": p.negotiatedQuotation || 0,
-        "Total Price (IDR)": (p.negotiatedQuotation || 0) * (p.quantity || 0)
+        "No. PP": p.noPp,
+        "SPH e-mail date": p.sphDate,
+        "No. SPH": p.noSph?.text,
+        "SPH Link": p.noSph?.link,
+        "Initial Quotation (IDR)": p.initialQuotation,
+        "PO Date": p.poDate,
+        "PO Number": p.poNumber,
+        "LPB Number": p.lpbNumber,
+        "Quotation after negotiation (IDR)": p.negotiatedQuotation,
+        "Total Price (IDR)": (p.negotiatedQuotation || 0) * (p.quantity || 0),
+        "Drawing Image URL": p.drawingImgUrl,
+        "Last Updated": p.lastUpdated?.toDate().toLocaleString('id-ID') || 'N/A',
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(mappedData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Purchases");
-    XLSX.writeFile(workbook, `Purchase_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
-    showToast("Excel report downloaded.", "success");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Full Purchase Backup");
+    
+    // Auto-fit column widths
+    const cols = Object.keys(mappedData[0]);
+    const colWidths = cols.map(col => ({
+      wch: Math.max(...mappedData.map(item => (item[col] ? item[col].toString().length : 0)), col.length)
+    }));
+    worksheet['!cols'] = colWidths;
+
+    XLSX.writeFile(workbook, `Full_Backup_${new Date().toISOString().slice(0,10)}.xlsx`);
+    showToast("Full data backup (Excel) downloaded.", "success");
 }
 
+/**
+ * NEW: Exports a professional, multi-page PDF report.
+ * This version includes a cover page, summary, headers, footers, and improved styling.
+ */
 export function exportToPDF(purchases) {
-    const dataToExport = getFilteredData(purchases);
+    // For visual reports, we use the currently filtered data from the UI.
+    const dataToExport = getFilteredData(purchases, false);
     if (dataToExport.length === 0) {
-        showToast("No data available to export.", "error");
+        showToast("No data to generate a report.", "error");
         return;
     }
 
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: 'landscape' });
 
-    const companyName = elements.companyNameInput.value || "Machine Purchase Report";
+    const companyName = elements.companyNameInput.value || "Machine Purchase Monitoring";
+    const reportTitle = "Purchase Order Report";
     const logoData = elements.logoPreview.src.startsWith('data:image') ? elements.logoPreview.src : null;
+    const reportDate = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
 
-    if (logoData) {
-        doc.addImage(logoData, 'PNG', 14, 12, 30, 15);
-    }
-    doc.setFontSize(18);
-    doc.text(companyName, logoData ? 50 : 14, 22);
-    doc.setFontSize(11);
-    doc.setTextColor(100);
-    doc.text(`Report generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+    // --- HELPER FUNCTIONS FOR PDF STYLING ---
+    const addHeader = () => {
+        if (logoData) {
+            doc.addImage(logoData, 'PNG', 15, 8, 24, 12);
+        }
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text(companyName, logoData ? 45 : 15, 15);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100);
+        doc.text(reportTitle, logoData ? 45 : 15, 20);
+    };
 
+    const addFooter = () => {
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.setTextColor(150);
+            doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width - 25, doc.internal.pageSize.height - 10);
+            doc.text(`Generated on: ${reportDate}`, 15, doc.internal.pageSize.height - 10);
+        }
+    };
+    
+    // --- PAGE 1: COVER PAGE & SUMMARY ---
+    addHeader();
+    doc.setFontSize(26);
+    doc.setFont('helvetica', 'bold');
+    doc.text(reportTitle, 148, 80, { align: 'center' });
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Date: ${reportDate}`, 148, 90, { align: 'center' });
+    
+    // Summary Section
+    const stats = getDashboardStats(dataToExport);
+    const summaryY = 120;
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Report Summary", 148, summaryY, { align: 'center' });
+    doc.autoTable({
+        startY: summaryY + 5,
+        body: [
+            ['Total Items', stats.totalItems.toString()],
+            ['Total Projects', stats.totalProjects.toString()],
+            ['Items In Progress', stats.inProgressCount.toString()],
+            ['Items Late', stats.lateCount.toString()],
+            ['Items Complete', stats.completeCount.toString()],
+            ['Total Report Value', formatCurrency(stats.totalValue)],
+        ],
+        theme: 'plain',
+        tableWidth: 80,
+        margin: { left: 108 },
+        styles: { fontSize: 11, cellPadding: 2 },
+        columnStyles: {
+            0: { fontStyle: 'bold' },
+        },
+    });
 
-    const head = [["Project", "No. Drawing", "Item Name", "Qty", "Status", "Total Price"]];
+    // --- SUBSEQUENT PAGES: DATA TABLE ---
+    doc.addPage();
+    addHeader();
+    
+    const head = [["Project", "No. Drawing", "Item Name", "Qty", "PIC", "Due Date", "Progress", "PO Number", "Total Price"]];
     const body = dataToExport.map(p => [
         p.projectCode || '-',
         p.noDrawing,
         p.itemName,
         p.quantity,
+        p.machinePic || '-',
+        p.dueDate || '-',
         getRawProgressStatus(p),
+        p.poNumber || '-',
         formatCurrency((p.negotiatedQuotation || 0) * (p.quantity || 0))
     ]);
 
     doc.autoTable({
-        startY: 35,
+        startY: 30,
         head: head,
         body: body,
         theme: 'striped',
-        headStyles: { fillColor: [55, 65, 81] },
+        headStyles: { fillColor: [41, 56, 86] }, // Dark blue color
+        styles: { fontSize: 9, cellPadding: 2 },
+        columnStyles: {
+            8: { halign: 'right' } // Align total price to the right
+        },
+        didDrawPage: (data) => {
+            // Add header to each new page created by autoTable
+            addHeader();
+        }
     });
 
-    doc.save(`Purchase_Report_${new Date().toISOString().slice(0,10)}.pdf`);
-    showToast("PDF report downloaded.", "success");
+    // --- FINALIZATION ---
+    addFooter();
+    doc.save(`Professional_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+    showToast("Professional PDF report downloaded.", "success");
 }
 
 // --- General UI Functions ---
@@ -408,3 +509,4 @@ export function showDetailsModal(item) {
     document.getElementById('details-total-price').textContent = formatCurrency((item.negotiatedQuotation || 0) * (item.quantity || 0));
     elements.detailsModal.classList.remove('hidden');
 }
+

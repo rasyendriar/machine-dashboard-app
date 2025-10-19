@@ -74,7 +74,7 @@ function setupEventListeners() {
     ui.elements.projectFilter.addEventListener('change', () => ui.renderTable(state.purchases));
     
     // New Listeners for Migration and Export
-    // ui.elements.migrateImagesBtn.addEventListener('click', handleImageMigration);
+    ui.elements.migrateImagesBtn.addEventListener('click', handleImageMigration);
     ui.elements.closeMigrationModalBtn.addEventListener('click', () => ui.showMigrationModal(false));
     ui.elements.exportPdfBtn.addEventListener('click', () => ui.exportToPDF(state.purchases));
     ui.elements.exportXlsxBtn.addEventListener('click', () => ui.exportToXLSX(state.purchases));
@@ -147,7 +147,7 @@ async function handleImageMigration() {
     
     ui.showMigrationResults(successCount, errorCount, errors);
 }
-// ...
+
 async function handleLogin(e) {
     e.preventDefault();
     const email = document.getElementById('username').value;

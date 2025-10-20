@@ -1,8 +1,0 @@
-# Ignore configuration files with secrets
-config.js
-
-# Firebase
-.firebase/
-firebase.json
-.firebaserc
-firebase-debug.log

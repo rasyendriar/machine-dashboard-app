@@ -475,3 +475,11 @@ export const updateMachineUI = (purchases) => {
     updateDashboard();
 };
 
+/**
+ * Returns the current state of the purchases.
+ * @returns {Array<object>}
+ */
+export const getAllPurchases = () => {
+    return allPurchases;
+};
+

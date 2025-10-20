@@ -27,7 +27,7 @@ const onGisLoaded = () => {
 
 /**
  * Memeriksa apakah semua API yang diperlukan telah diinisialisasi dan pengguna adalah admin.
- * Jika ya, tombol submit form akan diaktifkan.
+ * Jika ya, tombol submit formulir akan diaktifkan.
  */
 function checkApisReady() {
     if (ui.elements.submitBtn && state.gapiInited && state.gisInited && state.currentUserRole === 'admin') {
@@ -37,9 +37,9 @@ function checkApisReady() {
     }
 }
 
-// --- PENANGANAN DATA ---
+// --- DATA HANDLING ---
 /**
- * Fungsi callback untuk pembaruan real-time dari Firestore.
+ * Callback function untuk pembaruan real-time dari Firestore.
  * @param {object} querySnapshot - Snapshot dari koleksi purchases.
  */
 const onPurchasesUpdate = (querySnapshot) => {
@@ -139,8 +139,8 @@ async function handleDeleteConfirm() {
 }
 
 /**
- * Mengumpulkan semua data dari field form dan mengembalikannya sebagai objek.
- * @returns {object} Data pembelian yang dikumpulkan dari form.
+ * Mengumpulkan semua data dari field formulir dan mengembalikannya sebagai objek.
+ * @returns {object} Data pembelian yang dikumpulkan dari formulir.
  */
 function getPurchaseDataFromForm() {
     return {
@@ -169,7 +169,7 @@ function getPurchaseDataFromForm() {
 async function handleFormSubmit(e) {
     e.preventDefault();
     
-    // Validasi form dasar
+    // Validasi formulir dasar
     if (!document.getElementById('no-drawing').value || !document.getElementById('item-name').value || !document.getElementById('quantity').value) {
         ui.showToast('Harap isi semua field yang wajib diisi.', 'error');
         return;
@@ -190,6 +190,7 @@ async function handleFormSubmit(e) {
             } catch (error) {
                 console.error("Error mengunggah gambar: ", error);
                 ui.showToast(error.message || 'Unggahan gambar gagal. Silakan coba lagi.', 'error');
+                // Jangan lanjutkan jika unggahan gambar gagal.
                 return; 
             }
         }
@@ -209,8 +210,9 @@ async function handleFormSubmit(e) {
 
     } catch (error) {
         console.error("Error menulis ke Firestore: ", error);
-        ui.showToast('Error saat menyimpan data. Lihat konsol untuk detail.', 'error');
+        ui.showToast('Error penyimpanan data. Lihat konsol untuk detail.', 'error');
     } finally {
+        // Blok ini memastikan tombol selalu diaktifkan kembali dan teks direset.
         ui.elements.submitBtn.disabled = false;
         const currentEditId = ui.elements.editIdInput.value;
         ui.elements.submitBtnText.textContent = currentEditId ? 'Update Item' : 'Add Item';
@@ -272,7 +274,7 @@ function init() {
             
             if (state.currentUserRole === 'admin') {
                 ui.elements.submitBtn.disabled = true;
-                ui.elements.submitBtnText.textContent = 'Inisialisasi API...';
+                ui.elements.submitBtnText.textContent = 'Menginisialisasi API...';
                 driveService.init(onGapiLoaded, onGisLoaded);
             }
             
@@ -294,4 +296,3 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
-

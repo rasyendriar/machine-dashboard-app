@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebas
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, collection, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-// Langkah 1: Impor konfigurasi Anda
+// Impor konfigurasi Anda
 import { firebaseConfig, googleApiConfig } from './config.js';
 
 // --- KONFIGURASI ---
@@ -28,7 +28,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 let tokenClient;
-let gapiToken = null;
+let gapiToken = null; // Variabel untuk menyimpan token Google API
 
 // --- LAYANAN OTENTIKASI ---
 export const authService = {
@@ -53,27 +53,31 @@ export const firestoreService = {
     }
 };
 
+// --- Manajemen Token yang Diperbaiki ---
 /**
- * Mendapatkan token akses Google API yang valid, memperbaruinya hanya jika perlu.
+ * Mendapatkan token akses Google API yang valid, menyegarkannya hanya jika perlu.
  * @returns {Promise<string>} Promise yang resolve dengan token akses.
  */
 function getGapiToken() {
     return new Promise((resolve, reject) => {
+        // Jika kita memiliki token yang valid dan belum kedaluwarsa, langsung gunakan.
         if (gapiToken && gapiToken.expires_at > Date.now()) {
             return resolve(gapiToken.access_token);
         }
 
+        // Jika token tidak ada atau kedaluwarsa, minta yang baru.
         try {
             tokenClient.callback = (resp) => {
                 if (resp.error) {
                     gapiToken = null; // Hapus token jika ada error
                     return reject(resp);
                 }
+                // Simpan token baru dan hitung waktu kedaluwarsanya
                 gapiToken = resp;
                 gapiToken.expires_at = Date.now() + (parseInt(resp.expires_in, 10) - 60) * 1000;
                 resolve(gapiToken.access_token);
             };
-            // Penting: prompt kosong untuk menghindari pop-up yang tidak perlu
+            // Minta token secara "diam-diam" tanpa memaksa pop-up
             tokenClient.requestAccessToken({ prompt: '' });
         } catch (err) {
             gapiToken = null; // Hapus token jika permintaan gagal
@@ -82,7 +86,8 @@ function getGapiToken() {
     });
 }
 
-// --- LAYANAN GOOGLE DRIVE (VERSI SEDERHANA) ---
+
+// --- LAYANAN GOOGLE DRIVE ---
 export const driveService = {
     init: (onGapiLoaded, onGisLoaded) => {
         const gapiScript = document.createElement('script');
@@ -105,19 +110,20 @@ export const driveService = {
         tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: GOOGLE_CLIENT_ID,
             scope: SCOPES,
-            callback: '',
+            callback: '', 
         });
     },
-    uploadFile: (fileOrBlob) => {
+    uploadFile: (fileOrBlob, fileName) => {
         return new Promise(async (resolve, reject) => {
             if (!tokenClient) return reject(new Error("Google API belum diinisialisasi."));
             if (!SHARED_DRIVE_FOLDER_ID) return reject(new Error("URL folder Google Drive tidak valid."));
 
             try {
+                // Gunakan fungsi manajemen token yang baru dan andal
                 const accessToken = await getGapiToken();
                 
                 const metadata = {
-                    name: `drawing_${Date.now()}_${fileOrBlob.name}`,
+                    name: fileName || `drawing_${Date.now()}_${fileOrBlob.name}`,
                     mimeType: fileOrBlob.type,
                     parents: [SHARED_DRIVE_FOLDER_ID]
                 };
@@ -134,27 +140,29 @@ export const driveService = {
                 const fileData = await uploadResponse.json();
                 if (fileData.error) throw new Error(fileData.error.message);
 
+                // Atur izin agar file dapat dilihat oleh siapa saja
                 await fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}/permissions`, {
                     method: 'POST',
                     headers: new Headers({ 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ role: 'reader', type: 'anyone' }),
                 });
                 
-                // Langkah Kunci: Ambil webContentLink untuk pratinjau yang benar
+                // Ambil metadata file untuk mendapatkan tautan yang dapat disematkan (embeddable)
                 const fileMetadataResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}?fields=webContentLink`, {
                     headers: new Headers({ 'Authorization': `Bearer ${accessToken}` })
                 });
-                const fileMetadata = await fileMetadataResponse.json();
 
+                const fileMetadata = await fileMetadataResponse.json();
                 if (fileMetadata.error || !fileMetadata.webContentLink) {
-                    throw new Error('Tidak dapat mengambil tautan pratinjau setelah unggahan.');
+                    throw new Error('Tidak dapat mengambil tautan yang dapat disematkan setelah unggahan.');
                 }
                 
+                // Resolve dengan tautan yang benar dan andal
                 resolve(fileMetadata.webContentLink);
 
             } catch (error) {
-                console.error("Error Unggahan/Otentikasi:", error);
-                // Hapus token yang mungkin rusak pada setiap kegagalan
+                console.error("Kesalahan Unggahan/Otentikasi:", error);
+                // Penting: Hapus token yang di-cache jika terjadi kegagalan
                 gapiToken = null; 
                 reject(error);
             }

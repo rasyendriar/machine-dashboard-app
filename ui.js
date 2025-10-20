@@ -3,9 +3,7 @@ import { formatCurrency, getRawProgressStatus, getDashboardStats } from './utils
 let statusPieChart = null;
 let projectValueBarChart = null;
 
-// A single object to hold references to all the important DOM elements.
-// Using getters ensures that the DOM element is queried only when it's first accessed,
-// preventing "race condition" errors where the script runs before the DOM is fully loaded.
+// Objek tunggal untuk menampung referensi ke semua elemen DOM penting.
 export const elements = {
     get loginSection() { return document.getElementById('login-section'); },
     get appSection() { return document.getElementById('app-section'); },
@@ -13,8 +11,6 @@ export const elements = {
     get logoutBtn() { return document.getElementById('logout-btn'); },
     get loginError() { return document.getElementById('login-error'); },
     get form() { return document.getElementById('purchase-form'); },
-    // **FIX:** Added a direct reference to the form title element.
-    get formTitle() { return document.getElementById('form-title'); },
     get tableBody() { return document.getElementById('purchase-table-body'); },
     get editIdInput() { return document.getElementById('edit-id'); },
     get drawingImgInput() { return document.getElementById('drawing-img'); },
@@ -39,7 +35,7 @@ export const elements = {
     get themeToggleBtn() { return document.getElementById('theme-toggle'); },
     get themeToggleDarkIcon() { return document.getElementById('theme-toggle-dark-icon'); },
     get themeToggleLightIcon() { return document.getElementById('theme-toggle-light-icon'); },
-    // Report Modal Elements
+    // Elemen Modal Laporan
     get reportModal() { return document.getElementById('report-modal'); },
     get closeReportModalBtn() { return document.getElementById('close-report-modal'); },
     get companyNameInput() { return document.getElementById('company-name'); },
@@ -48,17 +44,10 @@ export const elements = {
     get exportReportBtn() { return document.getElementById('export-report-btn'); },
     get exportPdfBtn() { return document.getElementById('export-pdf-btn'); },
     get exportXlsxBtn() { return document.getElementById('export-xlsx-btn'); },
-    // Details Modal Elements
+    // Elemen Modal Detail
     get detailsModal() { return document.getElementById('details-modal'); },
     get closeDetailsModalBtn() { return document.getElementById('close-details-modal'); },
     get detailsDrawingImg() { return document.getElementById('details-drawing-img'); },
-    // Migration Modal Elements
-    get migrateImagesBtn() { return document.getElementById('migrate-images-btn'); },
-    get migrationModal() { return document.getElementById('migration-modal'); },
-    get migrationStatus() { return document.getElementById('migration-status'); },
-    get migrationProgress() { return document.getElementById('migration-progress'); },
-    get migrationResults() { return document.getElementById('migration-results'); },
-    get closeMigrationModalBtn() { return document.getElementById('close-migration-modal-btn'); },
 };
 
 export function showToast(message, type = 'success') {
@@ -72,44 +61,8 @@ export function showToast(message, type = 'success') {
     setTimeout(() => { toast.classList.remove('show'); toast.addEventListener('transitionend', () => toast.remove()); }, 4000);
 }
 
-// --- MIGRATION UI ---
-export function showMigrationModal(show) {
-    elements.migrationModal.classList.toggle('hidden', !show);
-    if(show) {
-        elements.migrationProgress.style.width = '0%';
-        elements.migrationStatus.textContent = 'Initializing migration...';
-        elements.migrationResults.classList.add('hidden');
-        elements.migrationResults.innerHTML = '';
-        elements.closeMigrationModalBtn.classList.add('hidden');
-    }
-}
-
-export function updateMigrationProgress(current, total) {
-    const percentage = total > 0 ? (current / total) * 100 : 0;
-    elements.migrationProgress.style.width = `${percentage}%`;
-    elements.migrationStatus.textContent = `Migrating image ${current} of ${total}...`;
-}
-
-export function showMigrationResults(successCount, errorCount, errors) {
-    elements.migrationStatus.textContent = `Migration complete!`;
-    elements.migrationResults.classList.remove('hidden');
-    let resultsHTML = `<p class="font-semibold">Successfully migrated: ${successCount}</p><p class="font-semibold">Failed to migrate: ${errorCount}</p>`;
-    if (errors.length > 0) {
-        resultsHTML += `<p class="mt-2 font-semibold">Failure details:</p><ul class="list-disc list-inside">`;
-        errors.forEach(err => {
-            resultsHTML += `<li>Item "${err.itemName}": ${err.error.message || 'Unknown error'}</li>`;
-        });
-        resultsHTML += `</ul>`;
-    }
-    elements.migrationResults.innerHTML = resultsHTML;
-    elements.closeMigrationModalBtn.classList.remove('hidden');
-}
-
-
-// --- EXPORTING LOGIC ---
+// --- LOGIKA EKSPOR ---
 function getFilteredData(purchases, fullReport = false) {
-    // If fullReport is false, it uses the UI filters.
-    // If true, it ignores UI filters and returns all data.
     if (fullReport) {
         return purchases;
     }
@@ -121,15 +74,10 @@ function getFilteredData(purchases, fullReport = false) {
     );
 }
 
-/**
- * NEW: Exports a full data backup to an XLSX file.
- * This includes all fields for backup and data analysis purposes.
- */
 export function exportToXLSX(purchases) {
-    // For backup, we always want the full, unfiltered dataset.
-    const dataToExport = getFilteredData(purchases, true); 
+    const dataToExport = getFilteredData(purchases, true);
     if (dataToExport.length === 0) {
-        showToast("No data available to export.", "error");
+        showToast("Tidak ada data yang tersedia untuk diekspor.", "error");
         return;
     }
 
@@ -161,7 +109,6 @@ export function exportToXLSX(purchases) {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Full Purchase Backup");
     
-    // Auto-fit column widths
     const cols = Object.keys(mappedData[0]);
     const colWidths = cols.map(col => ({
       wch: Math.max(...mappedData.map(item => (item[col] ? item[col].toString().length : 0)), col.length)
@@ -169,18 +116,13 @@ export function exportToXLSX(purchases) {
     worksheet['!cols'] = colWidths;
 
     XLSX.writeFile(workbook, `Full_Backup_${new Date().toISOString().slice(0,10)}.xlsx`);
-    showToast("Full data backup (Excel) downloaded.", "success");
+    showToast("Backup data lengkap (Excel) telah diunduh.", "success");
 }
 
-/**
- * NEW: Exports a professional, multi-page PDF report.
- * This version includes a cover page, summary, headers, footers, and improved styling.
- */
 export function exportToPDF(purchases) {
-    // For visual reports, we use the currently filtered data from the UI.
     const dataToExport = getFilteredData(purchases, false);
     if (dataToExport.length === 0) {
-        showToast("No data to generate a report.", "error");
+        showToast("Tidak ada data untuk membuat laporan.", "error");
         return;
     }
 
@@ -192,7 +134,6 @@ export function exportToPDF(purchases) {
     const logoData = elements.logoPreview.src.startsWith('data:image') ? elements.logoPreview.src : null;
     const reportDate = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
 
-    // --- HELPER FUNCTIONS FOR PDF STYLING ---
     const addHeader = () => {
         if (logoData) {
             doc.addImage(logoData, 'PNG', 15, 8, 24, 12);
@@ -213,11 +154,10 @@ export function exportToPDF(purchases) {
             doc.setFontSize(8);
             doc.setTextColor(150);
             doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width - 25, doc.internal.pageSize.height - 10);
-            doc.text(`Generated on: ${reportDate}`, 15, doc.internal.pageSize.height - 10);
+            doc.text(`Dibuat pada: ${reportDate}`, 15, doc.internal.pageSize.height - 10);
         }
     };
     
-    // --- PAGE 1: COVER PAGE & SUMMARY ---
     addHeader();
     doc.setFontSize(26);
     doc.setFont('helvetica', 'bold');
@@ -225,23 +165,22 @@ export function exportToPDF(purchases) {
     
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Date: ${reportDate}`, 148, 90, { align: 'center' });
+    doc.text(`Tanggal: ${reportDate}`, 148, 90, { align: 'center' });
     
-    // Summary Section
     const stats = getDashboardStats(dataToExport);
     const summaryY = 120;
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text("Report Summary", 148, summaryY, { align: 'center' });
+    doc.text("Ringkasan Laporan", 148, summaryY, { align: 'center' });
     doc.autoTable({
         startY: summaryY + 5,
         body: [
-            ['Total Items', stats.totalItems.toString()],
-            ['Total Projects', stats.totalProjects.toString()],
-            ['Items In Progress', stats.inProgressCount.toString()],
-            ['Items Late', stats.lateCount.toString()],
-            ['Items Complete', stats.completeCount.toString()],
-            ['Total Report Value', formatCurrency(stats.totalValue)],
+            ['Total Item', stats.totalItems.toString()],
+            ['Total Proyek', stats.totalProjects.toString()],
+            ['Item Dalam Proses', stats.inProgressCount.toString()],
+            ['Item Terlambat', stats.lateCount.toString()],
+            ['Item Selesai', stats.completeCount.toString()],
+            ['Total Nilai Laporan', formatCurrency(stats.totalValue)],
         ],
         theme: 'plain',
         tableWidth: 80,
@@ -252,11 +191,10 @@ export function exportToPDF(purchases) {
         },
     });
 
-    // --- SUBSEQUENT PAGES: DATA TABLE ---
     doc.addPage();
     addHeader();
     
-    const head = [["Project", "No. Drawing", "Item Name", "Qty", "PIC", "Due Date", "Progress", "PO Number", "Total Price"]];
+    const head = [["Proyek", "No. Gambar", "Nama Item", "Jml", "PIC", "Tgl. Jatuh Tempo", "Progres", "No. PO", "Total Harga"]];
     const body = dataToExport.map(p => [
         p.projectCode || '-',
         p.noDrawing,
@@ -274,24 +212,22 @@ export function exportToPDF(purchases) {
         head: head,
         body: body,
         theme: 'striped',
-        headStyles: { fillColor: [41, 56, 86] }, // Dark blue color
+        headStyles: { fillColor: [41, 56, 86] },
         styles: { fontSize: 9, cellPadding: 2 },
         columnStyles: {
-            8: { halign: 'right' } // Align total price to the right
+            8: { halign: 'right' }
         },
         didDrawPage: (data) => {
-            // Add header to each new page created by autoTable
             addHeader();
         }
     });
 
-    // --- FINALIZATION ---
     addFooter();
-    doc.save(`Professional_Report_${new Date().toISOString().slice(0,10)}.pdf`);
-    showToast("Professional PDF report downloaded.", "success");
+    doc.save(`Laporan_Profesional_${new Date().toISOString().slice(0,10)}.pdf`);
+    showToast("Laporan PDF profesional telah diunduh.", "success");
 }
 
-// --- General UI Functions ---
+// --- Fungsi UI Umum ---
 export function showApp(isLoggedIn) {
     elements.loginSection.classList.toggle('hidden', isLoggedIn);
     elements.appSection.classList.toggle('hidden', !isLoggedIn);
@@ -310,22 +246,22 @@ export function setupUIForRole(role) {
 }
 
 export function populateFormForEdit(item) {
-    elements.form.querySelector('#no-drawing').value = item.noDrawing;
-    elements.form.querySelector('#project-code').value = item.projectCode || '';
-    elements.form.querySelector('#item-name').value = item.itemName;
-    elements.form.querySelector('#quantity').value = item.quantity;
-    elements.form.querySelector('#due-date').value = item.dueDate || '';
-    elements.form.querySelector('#machine-pic').value = item.machinePic || 'Ali';
-    elements.form.querySelector('#status').value = item.status || 'Pending Approval';
-    elements.form.querySelector('#no-pp').value = item.noPp || '';
-    elements.form.querySelector('#sph-date').value = item.sphDate || '';
-    elements.form.querySelector('#no-sph-text').value = item.noSph?.text || '';
-    elements.form.querySelector('#no-sph-link').value = item.noSph?.link || '';
-    elements.form.querySelector('#initial-quotation').value = item.initialQuotation || '';
-    elements.form.querySelector('#po-date').value = item.poDate || '';
-    elements.form.querySelector('#po-number').value = item.poNumber || '';
-    elements.form.querySelector('#lpb-number').value = item.lpbNumber || '';
-    elements.form.querySelector('#negotiated-quotation').value = item.negotiatedQuotation || '';
+    document.getElementById('no-drawing').value = item.noDrawing;
+    document.getElementById('project-code').value = item.projectCode || '';
+    document.getElementById('item-name').value = item.itemName;
+    document.getElementById('quantity').value = item.quantity;
+    document.getElementById('due-date').value = item.dueDate || '';
+    document.getElementById('machine-pic').value = item.machinePic || 'Ali';
+    document.getElementById('status').value = item.status || 'Pending Approval';
+    document.getElementById('no-pp').value = item.noPp || '';
+    document.getElementById('sph-date').value = item.sphDate || '';
+    document.getElementById('no-sph-text').value = item.noSph?.text || '';
+    document.getElementById('no-sph-link').value = item.noSph?.link || '';
+    document.getElementById('initial-quotation').value = item.initialQuotation || '';
+    document.getElementById('po-date').value = item.poDate || '';
+    document.getElementById('po-number').value = item.poNumber || '';
+    document.getElementById('lpb-number').value = item.lpbNumber || '';
+    document.getElementById('negotiated-quotation').value = item.negotiatedQuotation || '';
     
     if (item.drawingImgUrl) {
         elements.drawingPreview.src = item.drawingImgUrl;
@@ -336,8 +272,7 @@ export function populateFormForEdit(item) {
     }
 
     elements.editIdInput.value = item.id;
-    // **FIX:** Use the new direct reference to the form title.
-    elements.formTitle.textContent = 'Edit Machine Purchase';
+    document.getElementById('form-title').textContent = 'Edit Machine Purchase';
     elements.submitBtnText.textContent = 'Update Item';
     document.getElementById('cancel-edit-btn').classList.remove('hidden');
     calculateTotal();
@@ -347,8 +282,7 @@ export function populateFormForEdit(item) {
 export function resetForm() {
     elements.form.reset();
     elements.editIdInput.value = '';
-    // **FIX:** Use the new direct reference to the form title.
-    elements.formTitle.textContent = 'Add New Machine Purchase';
+    document.getElementById('form-title').textContent = 'Add New Machine Purchase';
     elements.submitBtnText.textContent = 'Add Item';
     document.getElementById('cancel-edit-btn').classList.add('hidden');
     elements.drawingPreview.classList.add('hidden');
@@ -375,7 +309,6 @@ export function renderTable(purchases) {
         const totalNego = (p.negotiatedQuotation || 0) * (p.quantity || 0);
         const row = document.createElement('tr');
         row.className = 'fade-in-row';
-        // **MODIFICATION:** Replaced onclick attributes with data-* attributes for event delegation.
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium themed-text-primary">${p.projectCode || '-'}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${p.noDrawing}</td>
@@ -425,8 +358,7 @@ export function updateDashboard(purchases) {
     const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
     const textColor = isDark ? '#d1d5db' : '#5d4037';
     
-    // Key Metrics HTML
-    elements.keyMetricsContainer.innerHTML = ` <div class="themed-card p-6 rounded-2xl shadow-lg border flex items-center gap-4"><div class="bg-indigo-100 dark:bg-indigo-900/50 p-3 rounded-full"><svg class="w-6 h-6 text-indigo-600 dark:text-indigo-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.438.995s.145.755.438.995l1.003.827c.485.4.664 1.07.26 1.431l-1.296 2.247a1.125 1.125 0 01-1.37.49l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.52 6.52 0 01-.22-.127c-.324-.196-.72-.257-1.075-.124l-1.217.456a1.125 1.125 0 01-1.37-.49l-1.296-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.437-.995s-.145-.755-.437-.995l-1.004-.827a1.125 1.125 0 01-.26-1.431l1.296-2.247a1.125 1.125 0 011.37.49l1.217.456c.355.133.75.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg></div><div><p class="text-sm themed-text-secondary">Total Projects</p><p class="text-2xl font-bold themed-text-primary">${stats.totalProjects}</p></div></div> <div class="themed-card p-6 rounded-2xl shadow-lg border flex items-center gap-4"><div class="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-full"><svg class="w-6 h-6 text-blue-600 dark:text-blue-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25A2.25 2.25 0 0113.5 8.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg></div><div><p class="text-sm themed-text-secondary">Total Items</p><p class="text-2xl font-bold themed-text-primary">${stats.totalItems}</p></div></div> <div class="themed-card p-6 rounded-2xl shadow-lg border flex items-center gap-4"><div class="bg-green-100 dark:bg-green-900/50 p-3 rounded-full"><svg class="w-6 h-6 text-green-600 dark:text-green-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /></svg></div><div><p class="text-sm themed-text-secondary">Total Value</p><p class="text-2xl font-bold themed-text-primary">${formatCurrency(stats.totalValue)}</p></div></div> <div class="themed-card p-6 rounded-2xl shadow-lg border"><p class="text-sm themed-text-secondary mb-2">Progress Overview</p><div class="flex flex-col gap-2"> <div class="flex items-center gap-2"><span class="w-24 text-right text-xs text-red-600 dark:text-red-400">Late</span><div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4"><div class="bg-red-500 h-4 rounded-full" style="width: ${stats.totalItems > 0 ? (stats.lateCount/stats.totalItems)*100 : 0}%"></div></div><span class="w-8 text-left font-semibold text-sm">${stats.lateCount}</span></div> <div class="flex items-center gap-2"><span class="w-24 text-right text-xs text-blue-600 dark:text-blue-400">In Progress</span><div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4"><div class="bg-blue-500 h-4 rounded-full" style="width: ${stats.totalItems > 0 ? (stats.inProgressCount/stats.totalItems)*100 : 0}%"></div></div><span class="w-8 text-left font-semibold text-sm">${stats.inProgressCount}</span></div> <div class="flex items-center gap-2"><span class="w-24 text-right text-xs text-green-600 dark:text-green-400">Complete</span><div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4"><div class="bg-green-500 h-4 rounded-full" style="width: ${stats.totalItems > 0 ? (stats.completeCount/stats.totalItems)*100 : 0}%"></div></div><span class="w-8 text-left font-semibold text-sm">${stats.completeCount}</span></div> </div></div> `;
+    elements.keyMetricsContainer.innerHTML = ` <div class="themed-card p-6 rounded-2xl shadow-lg border flex items-center gap-4"><div class="bg-indigo-100 dark:bg-indigo-900/50 p-3 rounded-full"><svg class="w-6 h-6 text-indigo-600 dark:text-indigo-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.438.995s.145.755.438.995l1.003.827c.485.4.664 1.07.26 1.431l-1.296 2.247a1.125 1.125 0 01-1.37.49l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.52 6.52 0 01-.22-.127c-.324-.196-.72-.257-1.075-.124l-1.217.456a1.125 1.125 0 01-1.37-.49l-1.296-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.437-.995s-.145-.755-.437-.995l-1.004-.827a1.125 1.125 0 01-.26-1.431l1.296-2.247a1.125 1.125 0 011.37.49l1.217.456c.355.133.75.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg></div><div><p class="text-sm themed-text-secondary">Total Proyek</p><p class="text-2xl font-bold themed-text-primary">${stats.totalProjects}</p></div></div> <div class="themed-card p-6 rounded-2xl shadow-lg border flex items-center gap-4"><div class="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-full"><svg class="w-6 h-6 text-blue-600 dark:text-blue-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25A2.25 2.25 0 0113.5 8.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg></div><div><p class="text-sm themed-text-secondary">Total Item</p><p class="text-2xl font-bold themed-text-primary">${stats.totalItems}</p></div></div> <div class="themed-card p-6 rounded-2xl shadow-lg border flex items-center gap-4"><div class="bg-green-100 dark:bg-green-900/50 p-3 rounded-full"><svg class="w-6 h-6 text-green-600 dark:text-green-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /></svg></div><div><p class="text-sm themed-text-secondary">Total Nilai</p><p class="text-2xl font-bold themed-text-primary">${formatCurrency(stats.totalValue)}</p></div></div> <div class="themed-card p-6 rounded-2xl shadow-lg border"><p class="text-sm themed-text-secondary mb-2">Ringkasan Progres</p><div class="flex flex-col gap-2"> <div class="flex items-center gap-2"><span class="w-24 text-right text-xs text-red-600 dark:text-red-400">Terlambat</span><div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4"><div class="bg-red-500 h-4 rounded-full" style="width: ${stats.totalItems > 0 ? (stats.lateCount/stats.totalItems)*100 : 0}%"></div></div><span class="w-8 text-left font-semibold text-sm">${stats.lateCount}</span></div> <div class="flex items-center gap-2"><span class="w-24 text-right text-xs text-blue-600 dark:text-blue-400">Dalam Proses</span><div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4"><div class="bg-blue-500 h-4 rounded-full" style="width: ${stats.totalItems > 0 ? (stats.inProgressCount/stats.totalItems)*100 : 0}%"></div></div><span class="w-8 text-left font-semibold text-sm">${stats.inProgressCount}</span></div> <div class="flex items-center gap-2"><span class="w-24 text-right text-xs text-green-600 dark:text-green-400">Selesai</span><div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4"><div class="bg-green-500 h-4 rounded-full" style="width: ${stats.totalItems > 0 ? (stats.completeCount/stats.totalItems)*100 : 0}%"></div></div><span class="w-8 text-left font-semibold text-sm">${stats.completeCount}</span></div> </div></div> `;
 
     // Pie Chart
     const pieChartColors = ['#f59e0b', '#3b82f6', '#8b5cf6', '#10b981', '#ef4444', '#64748b'];
@@ -491,7 +423,6 @@ export function checkDashboardVisibility() {
 }
 
 export function showDetailsModal(item) {
-    // **PERBAIKAN:** Gunakan referensi dari objek elements untuk konsistensi
     elements.detailsDrawingImg.src = item.drawingImgUrl || 'https://placehold.co/400x300/e0e7ff/3730a3?text=N/A';
     
     document.getElementById('details-item-name').textContent = item.itemName || '-';
@@ -518,3 +449,4 @@ export function showDetailsModal(item) {
     document.getElementById('details-total-price').textContent = formatCurrency((item.negotiatedQuotation || 0) * (item.quantity || 0));
     elements.detailsModal.classList.remove('hidden');
 }
+

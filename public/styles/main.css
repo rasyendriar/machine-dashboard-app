@@ -1,5 +1,6 @@
 body {
     font-family: 'Inter', sans-serif;
+    overflow-x: hidden; /* Prevent horizontal scrollbar during transitions */
 }
 
 /* --- THEME COLORS --- */
@@ -15,6 +16,7 @@ body {
     --input-bg-light: #fff;
     --input-border-light: #d1d5db; /* gray-300 */
     --accent-color: #4f46e5; /* indigo-600 */
+    --sidebar-bg-light: #f3f2ef;
 }
 
 html.dark {
@@ -29,7 +31,76 @@ html.dark {
     --input-bg-dark: #374151; /* gray-700 */
     --input-border-dark: #4b5563; /* gray-600 */
     --accent-color: #6366f1; /* indigo-500 */
+    --sidebar-bg-dark: #1a2332;
 }
+
+/* --- NEW SIDEBAR & LAYOUT STYLES --- */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 260px;
+    background-color: var(--sidebar-bg-light);
+    border-right: 1px solid var(--border-light);
+    transition: all 0.3s ease-in-out;
+    z-index: 40;
+    overflow-x: hidden;
+}
+html.dark .sidebar {
+    background-color: var(--sidebar-bg-dark);
+    border-right-color: var(--border-dark);
+}
+.sidebar.collapsed {
+    width: 80px;
+}
+.sidebar.collapsed .sidebar-text {
+    opacity: 0;
+    width: 0;
+    pointer-events: none;
+}
+.main-content {
+    padding-left: 260px; /* Match sidebar width */
+    transition: padding-left 0.3s ease-in-out;
+}
+.main-content.collapsed {
+    padding-left: 80px; /* Match collapsed sidebar width */
+}
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1.5rem;
+    margin: 0.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    color: var(--text-secondary-light);
+    transition: all 0.2s ease-in-out;
+    white-space: nowrap;
+}
+html.dark .nav-link {
+    color: var(--text-secondary-dark);
+}
+.nav-link:hover {
+    background-color: var(--header-light);
+    color: var(--text-primary-light);
+}
+html.dark .nav-link:hover {
+    background-color: var(--header-dark);
+    color: var(--text-primary-dark);
+}
+.nav-link.active-nav {
+    background-color: var(--accent-color);
+    color: white;
+}
+html.dark .nav-link.active-nav {
+    color: white;
+}
+.sidebar-text {
+    transition: opacity 0.2s ease, width 0.2s ease;
+    opacity: 1;
+}
+
 
 /* --- THEMED UTILITY CLASSES --- */
 .themed-bg { background-color: var(--bg-light); }
@@ -106,7 +177,12 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 
 /* General UI styles */
 .required-label::after { content: '*'; color: #ef4444; margin-left: 4px; }
-.table-container { max-height: 60vh; overflow-y: auto; }
+/* STICKY HEADER FIX: Changed overflow-y to overflow */
+.table-container { 
+    max-height: 60vh; 
+    overflow: clip; /* This prevents overflow from interfering with sticky */
+    overflow-y: auto; /* Re-add vertical scroll */
+}
 .sticky-header th { position: sticky; top: 0; z-index: 10; }
 
 /* Animations */
@@ -129,30 +205,6 @@ body.is-admin .admin-only { display: block; }
 body.is-admin .admin-only-flex { display: flex; }
 body.is-admin .admin-only-grid { display: grid; }
 body.is-admin .admin-only-inline-flex { display: inline-flex; }
-
-/* Tab Navigation Styles */
-.tab-btn {
-    border-bottom: 2px solid transparent;
-    padding: 0.5rem 1rem;
-    font-weight: 600;
-    color: var(--text-secondary-light);
-    transition: all 0.2s ease-in-out;
-}
-html.dark .tab-btn {
-    color: var(--text-secondary-dark);
-}
-.tab-btn:hover {
-    color: var(--text-primary-light);
-    border-bottom-color: var(--border-light);
-}
-html.dark .tab-btn:hover {
-    color: var(--text-primary-dark);
-    border-bottom-color: var(--border-dark);
-}
-.tab-btn.active-tab {
-    color: var(--accent-color);
-    border-bottom-color: var(--accent-color);
-}
 
 /* Generic Form Button Styles */
 .form-btn-primary {
@@ -201,3 +253,4 @@ html.dark .form-btn-secondary:hover {
 html.dark .table-header {
     color: var(--text-secondary-dark);
 }
+

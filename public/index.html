@@ -29,20 +29,20 @@
     <div id="login-section" class="min-h-screen flex items-center justify-center">
         <div class="themed-card p-8 rounded-2xl shadow-lg border w-full max-w-sm">
             <div class="flex items-center justify-center gap-4 mb-6">
-                 <svg xmlns="http://www.w.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-600"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18M6 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2"/><path d="M18 18h2a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2"/><path d="M10 14v-2"/><path d="M7 14v-2"/><path d="M16 12h-2"/><path d="M14 12h-2"/></svg>
+                 <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-600"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18M6 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2"/><path d="M18 18h2a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2"/><path d="M10 14v-2"/><path d="M7 14v-2"/><path d="M16 12h-2"/><path d="M14 12h-2"/></svg>
                 <h1 class="text-2xl font-bold themed-text-primary">Dashboard Login</h1>
             </div>
             <form id="login-form" class="space-y-4">
                 <div>
                     <label for="username" class="block text-sm font-medium themed-text-secondary">Email</label>
-                    <input type="email" id="username" class="themed-input mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+                    <input type="email" id="username" name="username" class="themed-input mt-1 block w-full" required>
                 </div>
                 <div>
                     <label for="password" class="block text-sm font-medium themed-text-secondary">Password</label>
-                    <input type="password" id="password" class="themed-input mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+                    <input type="password" id="password" name="password" class="themed-input mt-1 block w-full" required>
                 </div>
                  <p id="login-error" class="text-sm text-red-500 hidden">Invalid email or password.</p>
-                <button type="submit" class="w-full inline-flex justify-center items-center gap-2 bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                <button type="submit" class="w-full form-btn-primary">
                     Login
                 </button>
             </form>
@@ -59,7 +59,7 @@
                  <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-600"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18M6 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2"/><path d="M18 18h2a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2"/><path d="M10 14v-2"/><path d="M7 14v-2"/><path d="M16 12h-2"/><path d="M14 12h-2"/></svg>
                 <div>
                     <h1 class="text-3xl md:text-4xl font-bold themed-text-primary text-left">Monitoring Dashboard</h1>
-                    <p id="header-subtitle" class="themed-text-secondary text-left">Monitor and manage all machine purchase orders efficiently.</p>
+                    <p id="header-subtitle" class="themed-text-secondary text-left">Monitor and manage all purchase orders efficiently.</p>
                 </div>
             </div>
             <div class="flex items-center gap-2">
@@ -83,14 +83,16 @@
         <!-- Tab Navigation -->
         <div class="mb-6 border-b themed-border">
             <nav class="-mb-px flex space-x-6" aria-label="Tabs">
-                <button id="tab-machine-purchase" class="tab-btn active-tab">Machine Purchase</button>
-                <button id="tab-spare-parts" class="tab-btn">Spare Part Purchase</button>
+                <button id="tab-machine-purchase" data-tab="machine-purchase-section" class="tab-btn active-tab">Machine Purchase</button>
+                <button id="tab-spare-parts" data-tab="spare-parts-section" class="tab-btn">Spare Part Purchase</button>
             </nav>
         </div>
         
         <!-- Main Content Area -->
         <main>
-            <!-- Machine Purchase Section -->
+            <!-- =============================== -->
+            <!-- MACHINE PURCHASE SECTION        -->
+            <!-- =============================== -->
             <div id="machine-purchase-section" class="tab-content">
                 <!-- Dashboard Panel Section -->
                 <div id="dashboard-panel" class="space-y-6 mb-8">
@@ -109,10 +111,95 @@
 
                 <!-- Machine Purchase Form -->
                 <div class="themed-card p-6 rounded-2xl shadow-lg mb-8 border admin-only">
-                    <h2 class="text-2xl font-semibold mb-6 border-b pb-4 themed-border themed-text-primary" id="form-title-machine">Add New Machine Purchase</h2>
-                    <form id="purchase-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <!-- All machine purchase form fields go here -->
-                        <!-- ... same as original file ... -->
+                    <h2 class="text-2xl font-semibold mb-6 border-b pb-4 themed-border themed-text-primary" id="machine-form-title">Add New Machine Purchase</h2>
+                    <form id="machine-purchase-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <input type="hidden" id="machine-edit-id">
+                        <div>
+                            <label for="machine-no-drawing" class="block text-sm font-medium themed-text-secondary required-label">No. Drawing</label>
+                            <input type="text" id="machine-no-drawing" name="machine-no-drawing" class="themed-input mt-1 block w-full" required>
+                        </div>
+                         <div>
+                            <label for="machine-project-code" class="block text-sm font-medium themed-text-secondary">Project Code</label>
+                            <input type="text" id="machine-project-code" name="machine-project-code" placeholder="e.g., TRL" class="themed-input mt-1 block w-full">
+                        </div>
+                        <div>
+                            <label for="machine-item-name" class="block text-sm font-medium themed-text-secondary required-label">Item Name</label>
+                            <input type="text" id="machine-item-name" name="machine-item-name" class="themed-input mt-1 block w-full" required>
+                        </div>
+                        <div>
+                            <label for="machine-quantity" class="block text-sm font-medium themed-text-secondary required-label">Quantity</label>
+                            <input type="number" id="machine-quantity" name="machine-quantity" min="1" class="themed-input mt-1 block w-full" required>
+                        </div>
+                         <div>
+                            <label for="machine-due-date" class="block text-sm font-medium themed-text-secondary">Due Date</label>
+                            <input type="date" id="machine-due-date" name="machine-due-date" class="themed-input mt-1 block w-full">
+                        </div>
+                        <div>
+                            <label for="machine-machine-pic" class="block text-sm font-medium themed-text-secondary">Machine's PIC</label>
+                            <select id="machine-machine-pic" name="machine-machine-pic" class="themed-input mt-1 block w-full">
+                                <option>Ali</option> <option>Alma</option> <option>Aris</option> <option>Ardi</option> <option>Willi</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="machine-status" class="block text-sm font-medium themed-text-secondary">Purchasing Status</label>
+                            <select id="machine-status" name="machine-status" class="themed-input mt-1 block w-full">
+                                <option>Pending Approval</option> <option>PP</option> <option>PO</option> <option>Incoming</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="machine-no-pp" class="block text-sm font-medium themed-text-secondary">No. PP</label>
+                            <input type="text" id="machine-no-pp" name="machine-no-pp" class="themed-input mt-1 block w-full">
+                        </div>
+                        <div>
+                            <label for="machine-sph-date" class="block text-sm font-medium themed-text-secondary">SPH e-mail date</label>
+                            <input type="date" id="machine-sph-date" name="machine-sph-date" class="themed-input mt-1 block w-full">
+                        </div>
+                        <div class="md:col-span-1">
+                            <label for="machine-no-sph-text" class="block text-sm font-medium themed-text-secondary">No. SPH</label>
+                            <input type="text" id="machine-no-sph-text" name="machine-no-sph-text" class="themed-input mt-1 block w-full">
+                        </div>
+                        <div class="md:col-span-1">
+                            <label for="machine-no-sph-link" class="block text-sm font-medium themed-text-secondary">SPH Link</label>
+                            <input type="url" id="machine-no-sph-link" name="machine-no-sph-link" placeholder="https://..." class="themed-input mt-1 block w-full">
+                        </div>
+                        <div>
+                            <label for="machine-initial-quotation" class="block text-sm font-medium themed-text-secondary">Initial Quotation (IDR)</label>
+                            <input type="number" id="machine-initial-quotation" name="machine-initial-quotation" min="0" class="themed-input mt-1 block w-full">
+                        </div>
+                        <div>
+                            <label for="machine-po-date" class="block text-sm font-medium themed-text-secondary">PO Date</label>
+                            <input type="date" id="machine-po-date" name="machine-po-date" class="themed-input mt-1 block w-full">
+                        </div>
+                        <div>
+                            <label for="machine-po-number" class="block text-sm font-medium themed-text-secondary">PO Number</label>
+                            <input type="text" id="machine-po-number" name="machine-po-number" class="themed-input mt-1 block w-full">
+                        </div>
+                        <div>
+                            <label for="machine-lpb-number" class="block text-sm font-medium themed-text-secondary">LPB Number</label>
+                            <input type="text" id="machine-lpb-number" name="machine-lpb-number" class="themed-input mt-1 block w-full">
+                        </div>
+                        <div>
+                            <label for="machine-negotiated-quotation" class="block text-sm font-medium themed-text-secondary">Quotation after negotiation (IDR)</label>
+                            <input type="number" id="machine-negotiated-quotation" name="machine-negotiated-quotation" min="0" class="themed-input mt-1 block w-full">
+                        </div>
+                        <div class="lg:col-span-1">
+                            <label for="machine-drawing-img" class="block text-sm font-medium themed-text-secondary">Drawing (Image)</label>
+                            <input type="file" id="machine-drawing-img" accept="image/jpeg, image/png" class="themed-file-button mt-1 block w-full text-sm themed-text-secondary cursor-pointer">
+                        </div>
+                        <div class="lg:col-span-1 flex justify-center items-center">
+                             <img id="machine-drawing-preview" src="" alt="Drawing Preview" class="mt-2 rounded-lg h-20 w-20 object-cover hidden border-2 themed-border"/>
+                        </div>
+                         <div class="lg:col-span-2 themed-inset-panel p-4 rounded-lg">
+                            <label class="block text-sm font-medium themed-text-secondary">Total Quotation Price</label>
+                            <p id="machine-total-price" class="text-2xl font-bold themed-text-primary mt-1">Rp 0,00</p>
+                        </div>
+                        
+                        <div class="md:col-span-2 lg:col-span-4 flex items-center justify-end space-x-4">
+                            <button type="button" id="machine-cancel-edit-btn" class="form-btn-secondary hidden">Cancel</button>
+                            <button type="submit" id="machine-submit-btn" class="form-btn-primary">
+                                <span id="machine-submit-btn-text">Add Item</span>
+                            </button>
+                        </div>
                     </form>
                 </div>
 
@@ -121,115 +208,112 @@
                     <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
                         <h2 class="text-2xl font-semibold themed-text-primary">Purchase Records</h2>
                         <div class="flex items-center space-x-4 w-full sm:w-auto">
-                            <!-- Machine purchase filters and search -->
-                            <!-- ... same as original file ... -->
+                            <select id="machine-project-filter" class="themed-input w-full sm:w-auto">
+                                <option value="all">All Projects</option>
+                            </select>
+                            <input type="text" id="machine-search-input" placeholder="Search records..." class="themed-input w-full sm:w-64">
+                            <button id="export-report-btn" class="form-btn-primary admin-only-inline-flex">
+                                Export
+                            </button>
                         </div>
                     </div>
                     <div class="overflow-x-auto table-container rounded-lg border themed-border">
                         <table class="min-w-full divide-y themed-border">
                             <thead class="themed-header sticky-header">
-                                <!-- Machine purchase table headers -->
-                                <!-- ... same as original file ... -->
+                                <tr>
+                                    <th class="table-header">Project</th>
+                                    <th class="table-header">No. Drawing</th>
+                                    <th class="table-header">Item Name</th>
+                                    <th class="table-header">PIC</th>
+                                    <th class="table-header">Qty</th>
+                                    <th class="table-header">Progress Status</th>
+                                    <th class="table-header">Purchasing Status</th>
+                                    <th class="table-header">Total Price</th>
+                                    <th class="table-header text-center">Actions</th>
+                                </tr>
                             </thead>
-                            <tbody id="purchase-table-body" class="themed-card divide-y themed-border themed-zebra"></tbody>
+                            <tbody id="machine-purchase-table-body" class="themed-card divide-y themed-border themed-zebra"></tbody>
                         </table>
-                        <div id="no-data-message-machine" class="text-center themed-text-secondary py-16 hidden">
-                            <!-- No data message -->
-                            <!-- ... same as original file ... -->
+                        <div id="machine-no-data-message" class="text-center themed-text-secondary py-16 hidden">
+                            <h3 class="mt-2 text-sm font-medium themed-text-primary">No records found</h3>
+                            <p class="mt-1 text-sm themed-text-secondary">Add a new machine purchase to get started.</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Spare Part Purchasing Section -->
+            <!-- =============================== -->
+            <!-- SPARE PART PURCHASING SECTION   -->
+            <!-- =============================== -->
             <div id="spare-parts-section" class="tab-content hidden">
                 <!-- Spare Parts Form -->
                 <div class="themed-card p-6 rounded-2xl shadow-lg mb-8 border admin-only">
-                    <h2 class="text-2xl font-semibold mb-6 border-b pb-4 themed-border themed-text-primary" id="form-title-spare">Add Spare Part Purchase</h2>
-                    <form id="spare-parts-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div>
-                            <label for="sp-pp-number" class="block text-sm font-medium themed-text-secondary required-label">PP Number</label>
-                            <input type="text" id="sp-pp-number" class="themed-input mt-1 block w-full" required>
+                    <h2 class="text-2xl font-semibold mb-6 border-b pb-4 themed-border themed-text-primary" id="spare-part-form-title">Add Spare Part Purchase</h2>
+                    <form id="spare-part-form" class="space-y-4">
+                        <input type="hidden" id="spare-part-edit-id">
+                        <!-- General PP Info -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                             <div>
+                                <label for="spare-part-pp-number" class="block text-sm font-medium themed-text-secondary required-label">PP Number</label>
+                                <input type="text" id="spare-part-pp-number" name="spare-part-pp-number" class="themed-input mt-1 block w-full" required>
+                            </div>
+                            <div>
+                                <label for="spare-part-project-name" class="block text-sm font-medium themed-text-secondary required-label">Project Name</label>
+                                <input type="text" id="spare-part-project-name" name="spare-part-project-name" class="themed-input mt-1 block w-full" required>
+                            </div>
+                            <div>
+                                <label for="spare-part-machine-name" class="block text-sm font-medium themed-text-secondary">Machine Name</label>
+                                <input type="text" id="spare-part-machine-name" name="spare-part-machine-name" class="themed-input mt-1 block w-full">
+                            </div>
+                             <div>
+                                <label for="spare-part-status" class="block text-sm font-medium themed-text-secondary">Status</label>
+                                <select id="spare-part-status" name="spare-part-status" class="themed-input mt-1 block w-full">
+                                    <option>Approval</option>
+                                    <option>PO</option>
+                                    <option>PP</option>
+                                    <option>Incoming</option>
+                                </select>
+                            </div>
+                             <div>
+                                <label for="spare-part-pp-date" class="block text-sm font-medium themed-text-secondary">PP Date</label>
+                                <input type="date" id="spare-part-pp-date" name="spare-part-pp-date" class="themed-input mt-1 block w-full">
+                            </div>
+                            <div>
+                                <label for="spare-part-po-number" class="block text-sm font-medium themed-text-secondary">PO Number</label>
+                                <input type="text" id="spare-part-po-number" name="spare-part-po-number" class="themed-input mt-1 block w-full">
+                            </div>
+                             <div>
+                                <label for="spare-part-po-date" class="block text-sm font-medium themed-text-secondary">PO Date</label>
+                                <input type="date" id="spare-part-po-date" name="spare-part-po-date" class="themed-input mt-1 block w-full">
+                            </div>
+                            <div>
+                                <label for="spare-part-ao-name" class="block text-sm font-medium themed-text-secondary">AO Name</label>
+                                <input type="text" id="spare-part-ao-name" name="spare-part-ao-name" class="themed-input mt-1 block w-full">
+                            </div>
+                            <div>
+                                <label for="spare-part-lpb-number" class="block text-sm font-medium themed-text-secondary">LPB Number</label>
+                                <input type="text" id="spare-part-lpb-number" name="spare-part-lpb-number" class="themed-input mt-1 block w-full">
+                            </div>
+                            <div>
+                                <label for="spare-part-lpb-date" class="block text-sm font-medium themed-text-secondary">LPB Date</label>
+                                <input type="date" id="spare-part-lpb-date" name="spare-part-lpb-date" class="themed-input mt-1 block w-full">
+                            </div>
                         </div>
-                        <div>
-                            <label for="sp-project-name" class="block text-sm font-medium themed-text-secondary required-label">Project Name</label>
-                            <input type="text" id="sp-project-name" class="themed-input mt-1 block w-full" required>
+
+                        <!-- Dynamic Part Items -->
+                        <div id="part-items-container" class="space-y-4">
+                            <!-- Part item rows will be injected here by JS -->
                         </div>
-                        <div>
-                            <label for="sp-machine-name" class="block text-sm font-medium themed-text-secondary">Machine Name</label>
-                            <input type="text" id="sp-machine-name" class="themed-input mt-1 block w-full">
-                        </div>
-                        <div>
-                            <label for="sp-product-name" class="block text-sm font-medium themed-text-secondary required-label">Product Name</label>
-                            <input type="text" id="sp-product-name" class="themed-input mt-1 block w-full" required>
-                        </div>
-                        <div>
-                            <label for="sp-model" class="block text-sm font-medium themed-text-secondary">Model</label>
-                            <input type="text" id="sp-model" class="themed-input mt-1 block w-full">
-                        </div>
-                        <div>
-                            <label for="sp-maker" class="block text-sm font-medium themed-text-secondary">Maker</label>
-                            <input type="text" id="sp-maker" class="themed-input mt-1 block w-full">
-                        </div>
-                        <div>
-                            <label for="sp-category" class="block text-sm font-medium themed-text-secondary">Category</label>
-                            <select id="sp-category" class="themed-input mt-1 block w-full">
-                                <option>Mechanical</option>
-                                <option>Electrical</option>
-                                <option>Tools</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="sp-quantity" class="block text-sm font-medium themed-text-secondary required-label">Quantity</label>
-                            <input type="number" id="sp-quantity" min="1" class="themed-input mt-1 block w-full" required>
-                        </div>
-                        <div>
-                            <label for="sp-status" class="block text-sm font-medium themed-text-secondary">Status</label>
-                            <select id="sp-status" class="themed-input mt-1 block w-full">
-                                <option>Approval</option>
-                                <option>PO</option>
-                                <option>PP</option>
-                                <option>Incoming</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="sp-pp-date" class="block text-sm font-medium themed-text-secondary">PP Date</label>
-                            <input type="date" id="sp-pp-date" class="themed-input mt-1 block w-full">
-                        </div>
-                        <div>
-                            <label for="sp-po-number" class="block text-sm font-medium themed-text-secondary">PO Number</label>
-                            <input type="text" id="sp-po-number" class="themed-input mt-1 block w-full">
-                        </div>
-                         <div>
-                            <label for="sp-po-date" class="block text-sm font-medium themed-text-secondary">PO Date</label>
-                            <input type="date" id="sp-po-date" class="themed-input mt-1 block w-full">
-                        </div>
-                        <div>
-                            <label for="sp-ao-name" class="block text-sm font-medium themed-text-secondary">AO Name</label>
-                            <input type="text" id="sp-ao-name" class="themed-input mt-1 block w-full">
-                        </div>
-                        <div>
-                            <label for="sp-lpb-number" class="block text-sm font-medium themed-text-secondary">LPB Number</label>
-                            <input type="text" id="sp-lpb-number" class="themed-input mt-1 block w-full">
-                        </div>
-                        <div>
-                            <label for="sp-lpb-date" class="block text-sm font-medium themed-text-secondary">LPB Date</label>
-                            <input type="date" id="sp-lpb-date" class="themed-input mt-1 block w-full">
-                        </div>
-                        <div>
-                            <label for="sp-price" class="block text-sm font-medium themed-text-secondary">Price</label>
-                            <input type="number" id="sp-price" min="0" class="themed-input mt-1 block w-full">
-                        </div>
-                        <div class="lg:col-span-2 themed-inset-panel p-4 rounded-lg">
-                            <label class="block text-sm font-medium themed-text-secondary">Total Price</label>
-                            <p id="sp-total-price" class="text-2xl font-bold themed-text-primary mt-1">Rp 0,00</p>
-                        </div>
-                        <div class="md:col-span-2 lg:col-span-4 flex items-center justify-end space-x-4">
-                            <input type="hidden" id="sp-edit-id">
-                            <button type="button" id="sp-cancel-edit-btn" class="form-btn-secondary hidden">Cancel</button>
-                            <button type="submit" id="sp-submit-btn" class="form-btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
-                                <span id="sp-submit-btn-text">Add Part</span>
-                            </button>
+
+                        <!-- Form Actions -->
+                        <div class="flex items-center justify-between pt-4 border-t themed-border">
+                            <button type="button" id="add-part-btn" class="form-btn-secondary">Add Another Part</button>
+                            <div class="flex items-center space-x-4">
+                                <button type="button" id="spare-part-cancel-edit-btn" class="form-btn-secondary hidden">Cancel</button>
+                                <button type="submit" id="spare-part-submit-btn" class="form-btn-primary">
+                                    <span id="spare-part-submit-btn-text">Add Purchase</span>
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -239,9 +323,9 @@
                     <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
                         <h2 class="text-2xl font-semibold themed-text-primary">Spare Part Records</h2>
                          <div class="flex flex-wrap items-center gap-4 w-full sm:w-auto">
-                            <input type="text" id="sp-search-pp" placeholder="Search by PP Number..." class="themed-input w-full sm:w-auto">
-                            <input type="text" id="sp-search-project" placeholder="Search by Project..." class="themed-input w-full sm:w-auto">
-                            <select id="sp-search-category" class="themed-input w-full sm:w-auto">
+                            <input type="text" id="spare-part-search-pp" placeholder="Search by PP Number..." class="themed-input w-full sm:w-auto">
+                            <input type="text" id="spare-part-search-project" placeholder="Search by Project..." class="themed-input w-full sm:w-auto">
+                            <select id="spare-part-filter-category" class="themed-input w-full sm:w-auto">
                                 <option value="all">All Categories</option>
                                 <option>Mechanical</option>
                                 <option>Electrical</option>
@@ -257,15 +341,16 @@
                                     <th class="table-header">Project Name</th>
                                     <th class="table-header">Product Name</th>
                                     <th class="table-header">Category</th>
-                                    <th class="table-header">Qty</th>
+                                    <th class="table-header text-center">Qty</th>
                                     <th class="table-header">Status</th>
+                                    <th class="table-header">PO Date</th>
                                     <th class="table-header">Total Price</th>
                                     <th class="table-header text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="spare-parts-table-body" class="themed-card divide-y themed-border themed-zebra"></tbody>
                         </table>
-                         <div id="no-data-message-spare" class="text-center themed-text-secondary py-16 hidden">
+                         <div id="spare-parts-no-data-message" class="text-center themed-text-secondary py-16 hidden">
                             <h3 class="mt-2 text-sm font-medium themed-text-primary">No records found</h3>
                             <p class="mt-1 text-sm themed-text-secondary">Add a new spare part purchase to get started.</p>
                          </div>
@@ -275,31 +360,95 @@
         </main>
     </div>
     
-    <!-- Modals and Toasts -->
+    <!-- =============================== -->
+    <!-- MODALS AND TOASTS               -->
+    <!-- =============================== -->
     <div id="toast-container"></div>
-    <!-- Delete Confirmation Modal (can be reused) -->
+    <!-- Delete Confirmation Modal (reused) -->
     <div id="custom-alert" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <!-- ... same as original file ... -->
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-xl themed-card modal">
+            <div class="mt-3 text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/50">
+                    <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <h3 class="text-lg leading-6 font-medium themed-text-primary mt-2">Delete Item</h3>
+                <p class="text-sm themed-text-secondary mt-2 px-4">Are you sure you want to delete this item? This action cannot be undone.</p>
+                <div class="flex justify-center gap-4 px-4 py-3 mt-4">
+                    <button id="alert-cancel" class="px-4 py-2 bg-stone-200 text-gray-900 font-medium rounded-lg w-24 shadow-sm hover:bg-stone-300 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500">Cancel</button>
+                    <button id="alert-confirm" class="px-4 py-2 bg-red-600 text-white font-medium rounded-lg w-24 shadow-sm hover:bg-red-700">Delete</button>
+                </div>
+            </div>
+        </div>
     </div>
     <!-- Report Setup Modal (for machine purchases) -->
     <div id="report-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <!-- ... same as original file ... -->
+         <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-xl themed-card modal">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold themed-text-primary">Report Setup</h3>
+                <button id="close-report-modal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label for="company-name" class="block text-sm font-medium themed-text-secondary">Company Name</label>
+                    <input type="text" id="company-name" placeholder="Your Company Inc." class="themed-input mt-1 block w-full">
+                </div>
+                <div>
+                    <label for="company-logo" class="block text-sm font-medium themed-text-secondary">Company Logo</label>
+                    <input type="file" id="company-logo" accept="image/jpeg, image/png" class="themed-file-button mt-1 block w-full text-sm themed-text-secondary cursor-pointer">
+                    <img id="logo-preview" src="#" alt="Logo Preview" class="mt-2 rounded-md h-20 object-contain hidden bg-gray-100 dark:bg-gray-700 p-2"/>
+                </div>
+            </div>
+            <div class="flex justify-end gap-4 px-4 py-3 mt-6 border-t themed-border -mx-5 -mb-5">
+                <button id="export-pdf" class="form-btn-secondary">Export as PDF</button>
+                <button id="export-xlsx" class="form-btn-primary">Export as Excel</button>
+            </div>
+        </div>
     </div>
     <!-- Details Modal (for machine purchases) -->
     <div id="details-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <!-- ... same as original file ... -->
+        <div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-xl themed-card modal">
+            <div class="flex justify-between items-center mb-4 border-b pb-4 themed-border">
+                <h3 class="text-xl font-semibold themed-text-primary">Purchase Record Details</h3>
+                <button id="close-details-modal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                <div class="md:col-span-1">
+                    <img id="details-drawing-img" src="" class="w-full h-auto object-cover rounded-lg border themed-border">
+                </div>
+                <div class="md:col-span-2 grid grid-cols-2 gap-x-6 gap-y-4">
+                    <div><p class="font-medium themed-text-secondary">Item Name</p><p id="details-item-name" class="themed-text-primary font-semibold"></p></div>
+                    <div><p class="font-medium themed-text-secondary">No. Drawing</p><p id="details-no-drawing" class="themed-text-primary font-semibold"></p></div>
+                    <div><p class="font-medium themed-text-secondary">Project Code</p><p id="details-project-code" class="themed-text-primary font-semibold"></p></div>
+                    <div><p class="font-medium themed-text-secondary">Machine's PIC</p><p id="details-machine-pic" class="themed-text-primary font-semibold"></p></div>
+                    <div><p class="font-medium themed-text-secondary">Quantity</p><p id="details-quantity" class="themed-text-primary font-semibold"></p></div>
+                    <div><p class="font-medium themed-text-secondary">Progress Status</p><p id="details-progress-status" class="font-semibold"></p></div>
+                    <div><p class="font-medium themed-text-secondary">Due Date</p><p id="details-due-date" class="themed-text-primary font-semibold"></p></div>
+                </div>
+                <div class="md:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-4 pt-4 border-t themed-border">
+                    <div><p class="font-medium themed-text-secondary">Purchasing Status</p><p id="details-status" class="themed-text-primary font-semibold"></p></div>
+                    <div><p class="font-medium themed-text-secondary">No. PP</p><p id="details-no-pp" class="themed-text-primary font-semibold"></p></div>
+                    <div><p class="font-medium themed-text-secondary">SPH</p><p id="details-no-sph" class="themed-text-primary font-semibold"></p></div>
+                    <div><p class="font-medium themed-text-secondary">SPH Date</p><p id="details-sph-date" class="themed-text-primary font-semibold"></p></div>
+                    <div><p class="font-medium themed-text-secondary">PO Date</p><p id="details-po-date" class="themed-text-primary font-semibold"></p></div>
+                    <div><p class="font-medium themed-text-secondary">PO Number</p><p id="details-po-number" class="themed-text-primary font-semibold"></p></div>
+                    <div><p class="font-medium themed-text-secondary">LPB Number</p><p id="details-lpb-number" class="themed-text-primary font-semibold"></p></div>
+                </div>
+                 <div class="md:col-span-3 grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4 pt-4 border-t themed-border">
+                    <div><p class="font-medium themed-text-secondary">Initial Quotation</p><p id="details-initial-quotation" class="themed-text-primary font-semibold"></p></div>
+                    <div><p class="font-medium themed-text-secondary">Negotiated Quotation</p><p id="details-negotiated-quotation" class="themed-text-primary font-semibold"></p></div>
+                    <div><p class="font-medium themed-text-secondary">Total Price</p><p id="details-total-price" class="text-indigo-600 dark:text-indigo-400 font-bold"></p></div>
+                </div>
+            </div>
+        </div>
     </div>
     
-    <!-- Google API scripts will be loaded dynamically by auth.js for admins -->
-    
     <!-- Our Custom JavaScript Modules -->
-    <script src="js/firebase-config.js" type="module"></script>
-    <script src="js/utils.js" type="module"></script>
-    <script src="js/auth.js" type="module"></script>
-    <script src="js/machine-store.js" type="module"></script>
-    <script src="js/machine-ui.js" type="module"></script>
-    <script src="js/spare-parts-store.js" type="module"></script>
-    <script src="js/spare-parts-ui.js" type="module"></script>
     <script src="js/main.js" type="module"></script>
+
 </body>
 </html>
+

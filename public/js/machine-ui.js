@@ -32,6 +32,9 @@ const customAlert = document.getElementById('custom-alert');
 const alertCancelBtn = document.getElementById('alert-cancel');
 const detailsModal = document.getElementById('details-modal');
 const closeDetailsModalBtn = document.getElementById('close-details-modal');
+const exportPdfBtn = document.getElementById('export-pdf');
+const exportXlsxBtn = document.getElementById('export-xlsx');
+
 
 // --- STATE ---
 let allPurchases = [];
@@ -421,6 +424,71 @@ export const handleMachineDelete = async () => {
     }
 };
 
+// --- NEW EXPORT FUNCTIONS ---
+const exportToXLSX = () => {
+    const dataToExport = allPurchases.map(p => ({
+        "Project": p.projectCode || "",
+        "No. Drawing": p.noDrawing || "",
+        "Item Name": p.itemName || "",
+        "PIC": p.machinePic || "",
+        "Qty": p.quantity || 0,
+        "Progress Status": getRawProgressStatus(p),
+        "Purchasing Status": p.status || "",
+        "Total Price": (p.negotiatedQuotation || 0) * (p.quantity || 0),
+        "Due Date": p.dueDate || "",
+        "No. PP": p.noPp || "",
+        "SPH Date": p.sphDate || "",
+        "No. SPH": p.noSph ? p.noSph.text : "",
+        "PO Date": p.poDate || "",
+        "PO Number": p.poNumber || "",
+        "LPB Number": p.lpbNumber || "",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Machine Purchases");
+    XLSX.writeFile(workbook, "Machine_Purchase_Report.xlsx");
+};
+
+const exportToPDF = () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const companyName = document.getElementById('company-name').value || 'Machine Purchase Report';
+    const logo = localStorage.getItem('companyLogo');
+
+    const tableColumn = ["Project", "Item Name", "Qty", "Status", "Progress", "Total Price"];
+    const tableRows = [];
+
+    allPurchases.forEach(p => {
+        const purchaseData = [
+            p.projectCode || "-",
+            p.itemName,
+            p.quantity,
+            p.status,
+            getRawProgressStatus(p),
+            formatCurrency((p.negotiatedQuotation || 0) * (p.quantity || 0))
+        ];
+        tableRows.push(purchaseData);
+    });
+
+    doc.autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        didDrawPage: function (data) {
+            // Header
+            if (logo) {
+                doc.addImage(logo, 'PNG', data.settings.margin.left, 15, 40, 15);
+            }
+            doc.setFontSize(20);
+            doc.setTextColor(40);
+            doc.text(companyName, data.settings.margin.left + (logo ? 50 : 0), 22);
+        },
+        startY: 40,
+    });
+
+    doc.save("Machine_Purchase_Report.pdf");
+};
+
 
 // --- PUBLIC FUNCTIONS ---
 
@@ -461,6 +529,10 @@ export const initializeMachineUI = () => {
         customAlert.classList.add('hidden');
     });
     closeDetailsModalBtn.addEventListener('click', () => detailsModal.classList.add('hidden'));
+
+    // Attach export button listeners
+    exportXlsxBtn.addEventListener('click', exportToXLSX);
+    exportPdfBtn.addEventListener('click', exportToPDF);
 };
 
 /**

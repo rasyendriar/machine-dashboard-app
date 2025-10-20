@@ -29,7 +29,6 @@ const cancelEditBtn = document.getElementById('machine-cancel-edit-btn');
 
 // Modals
 const customAlert = document.getElementById('custom-alert');
-const alertConfirmBtn = document.getElementById('alert-confirm');
 const alertCancelBtn = document.getElementById('alert-cancel');
 const detailsModal = document.getElementById('details-modal');
 const closeDetailsModalBtn = document.getElementById('close-details-modal');
@@ -405,8 +404,9 @@ const handleTableClick = (e) => {
 
 /**
  * Handles the confirmation of a delete action.
+ * This is exported so main.js can call it.
  */
-const confirmDelete = async () => {
+export const handleMachineDelete = async () => {
     if (itemToDeleteId) {
         try {
             await deleteMachinePurchase(itemToDeleteId);
@@ -456,8 +456,10 @@ export const initializeMachineUI = () => {
         form['machine-project-code'].value = parts.length > 1 ? parts[0].toUpperCase() : '';
     });
 
-    alertConfirmBtn.addEventListener('click', confirmDelete);
-    alertCancelBtn.addEventListener('click', () => customAlert.classList.add('hidden'));
+    alertCancelBtn.addEventListener('click', () => {
+        itemToDeleteId = null;
+        customAlert.classList.add('hidden');
+    });
     closeDetailsModalBtn.addEventListener('click', () => detailsModal.classList.add('hidden'));
 };
 
@@ -472,3 +474,4 @@ export const updateMachineUI = (purchases) => {
     renderTable();
     updateDashboard();
 };
+

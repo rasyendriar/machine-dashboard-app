@@ -258,6 +258,21 @@
                 <!-- SPARE PART PURCHASING SECTION   -->
                 <!-- =============================== -->
                 <div id="spare-parts-section" class="tab-content hidden">
+                    <!-- NEW Spare Parts Dashboard -->
+                    <div id="spare-parts-dashboard-panel" class="space-y-6 mb-8">
+                        <div id="spare-parts-key-metrics-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="lg:col-span-2 themed-card p-6 rounded-2xl shadow-lg border">
+                                <h3 class="text-lg font-semibold themed-text-primary mb-4">Value by Project</h3>
+                                <canvas id="spare-parts-project-value-bar-chart"></canvas>
+                            </div>
+                            <div class="lg:col-span-1 themed-card p-6 rounded-2xl shadow-lg border flex flex-col justify-center items-center">
+                                <h3 class="text-lg font-semibold themed-text-primary mb-4">Status Distribution</h3>
+                                <canvas id="spare-parts-status-pie-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Spare Parts Form -->
                     <div class="themed-card p-6 rounded-2xl shadow-lg mb-8 border admin-only">
                         <h2 class="text-2xl font-semibold mb-6 border-b pb-4 themed-border themed-text-primary" id="spare-part-form-title">Add Spare Part Purchase</h2>

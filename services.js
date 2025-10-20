@@ -1,4 +1,3 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, collection, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
@@ -55,7 +54,7 @@ export const firestoreService = {
     }
 };
 
-// --- **FIX:** NEW Token Management Function ---
+// --- NEW: Token Management Function ---
 /**
  * Gets a valid Google API access token, refreshing it only when necessary.
  * This prevents the user from being prompted on every single upload.
@@ -78,8 +77,7 @@ function getGapiToken() {
             gapiToken.expires_at = Date.now() + (parseInt(resp.expires_in, 10) - 60) * 1000;
             resolve(gapiToken.access_token);
         };
-        // **FIX:** The 'prompt' parameter is key. An empty string attempts to get a token
-        // without user interaction if they've already granted permission.
+        // *** THE FINAL FIX: Change 'consent' to an empty string to allow silent token refresh. ***
         tokenClient.requestAccessToken({ prompt: '' });
     });
 }
@@ -108,7 +106,7 @@ export const driveService = {
         tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: GOOGLE_CLIENT_ID,
             scope: SCOPES,
-            callback: '', // Callback is handled dynamically in getGapiToken
+            callback: '', 
         });
     },
     uploadFile: (fileOrBlob, fileName) => {
@@ -117,7 +115,6 @@ export const driveService = {
             if (!SHARED_DRIVE_FOLDER_ID) return reject(new Error("Invalid Google Drive folder URL."));
 
             try {
-                // **FIX:** Use the new token management function.
                 const accessToken = await getGapiToken();
                 
                 const metadata = {
@@ -138,20 +135,30 @@ export const driveService = {
                 const fileData = await uploadResponse.json();
                 if (fileData.error) return reject(new Error(fileData.error.message));
 
+                // Set file permission to be publicly readable
                 await fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}/permissions`, {
                     method: 'POST',
                     headers: new Headers({ 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ role: 'reader', type: 'anyone' }),
                 });
                 
-                const embeddableUrl = `https://drive.google.com/uc?export=view&id=${fileData.id}`;
+                // *** THE FIX: Make a second API call to get the correct embeddable link ***
+                const fileMetadataResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}?fields=webContentLink`, {
+                    headers: new Headers({ 'Authorization': `Bearer ${accessToken}` })
+                });
+
+                const fileMetadata = await fileMetadataResponse.json();
+                if (fileMetadata.error || !fileMetadata.webContentLink) {
+                    return reject(new Error('Could not retrieve embeddable link after upload.'));
+                }
                 
-                resolve(embeddableUrl);
+                // Resolve with the correct link for direct embedding.
+                resolve(fileMetadata.webContentLink);
 
             } catch (error) {
                 console.error("Upload/Auth Error:", error);
-                // **FIX:** If an auth error occurs, clear the cached token to force a refresh on the next attempt.
-                if (error && (error.type === 'token' || error.result?.error?.code === 401)) {
+                // If an auth error occurs, clear the cached token to force a refresh on the next attempt.
+                if (error && error.type === 'token') {
                     gapiToken = null; 
                 }
                 reject(error);

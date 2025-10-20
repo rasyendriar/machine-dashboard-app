@@ -1,0 +1,33 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if the logged-in user has the 'admin' role.
+    // It looks up their user document in the 'users' collection.
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Rule for the 'users' collection.
+    // Allows a user to read their own data, but only an admin can write user data.
+    match /users/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // Rule for the 'purchases' collection (your existing feature).
+    // Allows any authenticated user to read, but only admins can write/delete.
+    match /purchases/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+    
+    // Rule for the 'spareParts' collection (your new feature).
+    // Allows any authenticated user to read, but only admins can write/delete.
+    match /spareParts/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+  }
+}

@@ -2,7 +2,6 @@ import * as ui from './ui.js';
 import { authService, firestoreService, driveService } from './services.js';
 
 // --- STATE ---
-// Encapsulate state into a single object for better management and clarity.
 const state = {
     purchases: [],
     imageFileToUpload: null,
@@ -14,7 +13,6 @@ const state = {
 };
 
 // --- GOOGLE API CALLBACKS ---
-// These functions are called when the Google API scripts are loaded.
 const onGapiLoaded = async () => {
     await driveService.initGapiClient();
     state.gapiInited = true;
@@ -28,8 +26,8 @@ const onGisLoaded = () => {
 };
 
 /**
- * Checks if all necessary APIs are initialized and the user is an admin.
- * If so, it enables the form's submit button.
+ * Memeriksa apakah semua API yang diperlukan telah diinisialisasi dan pengguna adalah admin.
+ * Jika ya, tombol submit form akan diaktifkan.
  */
 function checkApisReady() {
     if (ui.elements.submitBtn && state.gapiInited && state.gisInited && state.currentUserRole === 'admin') {
@@ -39,10 +37,10 @@ function checkApisReady() {
     }
 }
 
-// --- DATA HANDLING ---
+// --- PENANGANAN DATA ---
 /**
- * Callback function for real-time updates from Firestore.
- * @param {object} querySnapshot - The snapshot of the purchases collection.
+ * Fungsi callback untuk pembaruan real-time dari Firestore.
+ * @param {object} querySnapshot - Snapshot dari koleksi purchases.
  */
 const onPurchasesUpdate = (querySnapshot) => {
     state.purchases = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -51,7 +49,7 @@ const onPurchasesUpdate = (querySnapshot) => {
     ui.updateDashboard(state.purchases);
 };
 
-// --- EVENT LISTENER SETUP ---
+// --- PENYIAPAN EVENT LISTENER ---
 function setupEventListeners() {
     ui.elements.loginForm.addEventListener('submit', handleLogin);
     ui.elements.logoutBtn.addEventListener('click', () => authService.signOut());
@@ -73,22 +71,19 @@ function setupEventListeners() {
     ui.elements.searchInput.addEventListener('input', () => ui.renderTable(state.purchases));
     ui.elements.projectFilter.addEventListener('change', () => ui.renderTable(state.purchases));
     
-    // New Listeners for Migration and Export
-    ui.elements.migrateImagesBtn.addEventListener('click', handleImageMigration);
-    ui.elements.closeMigrationModalBtn.addEventListener('click', () => ui.showMigrationModal(false));
+    // Listener untuk Ekspor
     ui.elements.exportPdfBtn.addEventListener('click', () => ui.exportToPDF(state.purchases));
     ui.elements.exportXlsxBtn.addEventListener('click', () => ui.exportToXLSX(state.purchases));
 
-    // **Event Delegation for Table Actions**
-    // A single listener on the table body handles all button clicks inside it.
+    // Event Delegation untuk Aksi Tabel
     ui.elements.tableBody.addEventListener('click', handleTableActions);
 }
 
-// --- EVENT HANDLER LOGIC ---
+// --- LOGIKA EVENT HANDLER ---
 
 /**
- * Handles clicks on action buttons within the data table using event delegation.
- * @param {Event} e The click event object.
+ * Menangani klik pada tombol aksi di dalam tabel data menggunakan event delegation.
+ * @param {Event} e Objek event klik.
  */
 function handleTableActions(e) {
     const button = e.target.closest('button[data-action]');
@@ -115,39 +110,6 @@ function handleTableActions(e) {
     }
 }
 
-
-async function handleImageMigration() {
-    const itemsToMigrate = state.purchases.filter(p => p.drawingImgUrl && p.drawingImgUrl.includes('googleusercontent.com'));
-    
-    if (itemsToMigrate.length === 0) {
-        ui.showToast("No images found to migrate.", "success");
-        return;
-    }
-
-    ui.showMigrationModal(true);
-
-    let successCount = 0;
-    let errorCount = 0;
-    const errors = [];
-
-    for (let i = 0; i < itemsToMigrate.length; i++) {
-        const item = itemsToMigrate[i];
-        ui.updateMigrationProgress(i + 1, itemsToMigrate.length);
-        
-        try {
-            // Call the new Cloud Function-based migration service
-            const newUrl = await driveService.migrateImageViaFunction(item.drawingImgUrl);
-            await firestoreService.updatePurchase(item.id, { drawingImgUrl: newUrl });
-            successCount++;
-        } catch (error) {
-            errorCount++;
-            errors.push({ itemName: item.itemName, error });
-        }
-    }
-    
-    ui.showMigrationResults(successCount, errorCount, errors);
-}
-
 async function handleLogin(e) {
     e.preventDefault();
     const email = document.getElementById('username').value;
@@ -156,7 +118,7 @@ async function handleLogin(e) {
         await authService.signIn(email, password);
         ui.setLoginError(false);
     } catch (error) {
-        console.error("Login failed:", error.message);
+        console.error("Login gagal:", error.message);
         ui.setLoginError(true);
     }
 }
@@ -165,10 +127,10 @@ async function handleDeleteConfirm() {
     if (state.itemToDeleteId) {
         try {
             await firestoreService.deletePurchase(state.itemToDeleteId);
-            ui.showToast('Item deleted successfully.', 'success');
+            ui.showToast('Item berhasil dihapus.', 'success');
         } catch (error) {
-            console.error("Error deleting item:", error);
-            ui.showToast('Failed to delete item.', 'error');
+            console.error("Error menghapus item:", error);
+            ui.showToast('Gagal menghapus item.', 'error');
         } finally {
             state.itemToDeleteId = null;
             ui.elements.customAlert.classList.add('hidden');
@@ -177,8 +139,8 @@ async function handleDeleteConfirm() {
 }
 
 /**
- * Gathers all data from the form fields and returns it as an object.
- * @returns {object} The purchase data collected from the form.
+ * Mengumpulkan semua data dari field form dan mengembalikannya sebagai objek.
+ * @returns {object} Data pembelian yang dikumpulkan dari form.
  */
 function getPurchaseDataFromForm() {
     return {
@@ -207,14 +169,14 @@ function getPurchaseDataFromForm() {
 async function handleFormSubmit(e) {
     e.preventDefault();
     
-    // Basic form validation
+    // Validasi form dasar
     if (!document.getElementById('no-drawing').value || !document.getElementById('item-name').value || !document.getElementById('quantity').value) {
-        ui.showToast('Please fill all required fields.', 'error');
+        ui.showToast('Harap isi semua field yang wajib diisi.', 'error');
         return;
     }
 
     ui.elements.submitBtn.disabled = true;
-    ui.elements.submitBtnText.textContent = 'Saving...';
+    ui.elements.submitBtnText.textContent = 'Menyimpan...';
     
     const id = ui.elements.editIdInput.value;
     let purchaseData = getPurchaseDataFromForm();
@@ -226,9 +188,8 @@ async function handleFormSubmit(e) {
             try {
                 drawingImgUrl = await driveService.uploadFile(state.imageFileToUpload);
             } catch (error) {
-                console.error("Error uploading image: ", error);
-                ui.showToast(error.message || 'Image upload failed. Please try again.', 'error');
-                // Don't proceed if image upload fails.
+                console.error("Error mengunggah gambar: ", error);
+                ui.showToast(error.message || 'Unggahan gambar gagal. Silakan coba lagi.', 'error');
                 return; 
             }
         }
@@ -237,20 +198,19 @@ async function handleFormSubmit(e) {
 
         if (id) {
             await firestoreService.updatePurchase(id, purchaseData);
-            ui.showToast('Item updated successfully!');
+            ui.showToast('Item berhasil diperbarui!');
         } else {
             await firestoreService.addPurchase(purchaseData);
-            ui.showToast('New item added successfully!');
+            ui.showToast('Item baru berhasil ditambahkan!');
         }
         
         ui.resetForm();
         state.imageFileToUpload = null;
 
     } catch (error) {
-        console.error("Error writing to Firestore: ", error);
-        ui.showToast('Data saving error. See console for details.', 'error');
+        console.error("Error menulis ke Firestore: ", error);
+        ui.showToast('Error saat menyimpan data. Lihat konsol untuk detail.', 'error');
     } finally {
-        // This block ensures the button is always re-enabled and text is reset.
         ui.elements.submitBtn.disabled = false;
         const currentEditId = ui.elements.editIdInput.value;
         ui.elements.submitBtnText.textContent = currentEditId ? 'Update Item' : 'Add Item';
@@ -301,7 +261,7 @@ function handleNoDrawingInput(e) {
     projectCodeInput.value = (parts.length > 1 && parts[0]) ? parts[0].toUpperCase() : '';
 }
 
-// --- APP INITIALIZATION ---
+// --- INISIALISASI APLIKASI ---
 function init() {
     setupEventListeners();
     authService.onAuthStateChanged(async (user) => {
@@ -312,7 +272,7 @@ function init() {
             
             if (state.currentUserRole === 'admin') {
                 ui.elements.submitBtn.disabled = true;
-                ui.elements.submitBtnText.textContent = 'Initializing API...';
+                ui.elements.submitBtnText.textContent = 'Inisialisasi API...';
                 driveService.init(onGapiLoaded, onGisLoaded);
             }
             

@@ -21,9 +21,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoPreview = document.getElementById('logo-preview');
     const exportPdfBtn = document.getElementById('export-pdf');
     const exportXlsxBtn = document.getElementById('export-xlsx');
-    const tabs = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
     const alertConfirmBtn = document.getElementById('alert-confirm');
+    
+    // --- NEW SIDEBAR ELEMENTS ---
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+    const sidebarToggleBtn = document.getElementById('sidebar-toggle');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const tabContents = document.querySelectorAll('.tab-content');
+
 
     // --- UNSUBSCRIBE FUNCTIONS ---
     let unsubscribeMachines = null;
@@ -40,6 +46,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (localStorage.getItem('dashboardHidden') === 'true') {
             dashboardPanel.classList.add('hidden');
             toggleDashboardIcon.classList.add('rotate-180');
+        }
+    };
+    
+    const checkSidebarState = () => {
+        if (localStorage.getItem('sidebarCollapsed') === 'true') {
+            sidebar.classList.add('collapsed');
+            mainContent.classList.add('collapsed');
         }
     };
 
@@ -91,29 +104,38 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleDashboardIcon.classList.toggle('rotate-180', isHidden);
     });
 
-    // Tab navigation
-    tabs.forEach(tab => {
-        tab.addEventListener('click', (e) => {
-            e.preventDefault();
-            tabs.forEach(t => t.classList.remove('active-tab'));
+    // --- NEW SIDEBAR LOGIC ---
+    sidebarToggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+        mainContent.classList.toggle('collapsed');
+        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+    });
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            navLinks.forEach(l => l.classList.remove('active-nav'));
             tabContents.forEach(c => c.classList.add('hidden'));
 
-            tab.classList.add('active-tab');
-            const targetContent = document.getElementById(tab.dataset.tab);
+            link.classList.add('active-nav');
+            const targetContent = document.getElementById(link.dataset.tab);
             if(targetContent) {
                 targetContent.classList.remove('hidden');
             }
         });
     });
+    // --- END NEW SIDEBAR LOGIC ---
+
 
     // Centralized Delete Confirmation Handler
     alertConfirmBtn.addEventListener('click', () => {
-        const activeTab = document.querySelector('.tab-btn.active-tab');
-        if (!activeTab) return;
+        const activeLink = document.querySelector('.nav-link.active-nav');
+        if (!activeLink) return;
         
-        if (activeTab.id === 'tab-machine-purchase') {
+        const activeTabId = activeLink.dataset.tab;
+
+        if (activeTabId === 'machine-purchase-section') {
             handleMachineDelete();
-        } else if (activeTab.id === 'tab-spare-parts') {
+        } else if (activeTabId === 'spare-parts-section') {
             handleSparePartDelete();
         }
     });
@@ -145,5 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- INITIAL PAGE LOAD CHECKS ---
     checkDashboardVisibility();
     syncIconWithTheme();
+    checkSidebarState();
 });
 

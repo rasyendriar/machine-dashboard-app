@@ -1,6 +1,6 @@
 import { initializeAuth } from './auth.js';
 import { listenForMachinePurchases, initializeGoogleDriveApi } from './machine-store.js';
-import { initializeMachineUI, updateMachineUI, handleMachineDelete } from './machine-ui.js';
+import { initializeMachineUI, updateMachineUI, handleMachineDelete, getAllPurchases } from './machine-ui.js';
 import { listenForSpareParts } from './spare-parts-store.js';
 import { initializeSparePartsUI, updateSparePartsUI, handleSparePartDelete } from './spare-parts-ui.js';
 
@@ -78,9 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.documentElement.classList.toggle('dark');
         localStorage.setItem('color-theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
         syncIconWithTheme();
-        // Force chart redraw by briefly clearing data. The listener will immediately repopulate it.
-        if (typeof updateMachineUI === 'function') {
-           updateMachineUI(lastMachineData); 
+        // Force chart redraw by re-running the update function with the current data.
+        if (typeof getAllPurchases === 'function') {
+           updateMachineUI(getAllPurchases()); 
         }
     });
     

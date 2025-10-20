@@ -9,19 +9,6 @@ import { firebaseConfig, googleApiConfig } from './config.js';
 const GOOGLE_API_KEY = googleApiConfig.apiKey;
 const GOOGLE_CLIENT_ID = googleApiConfig.clientId;
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-const SHARED_DRIVE_FOLDER_URL = googleApiConfig.folderUrl;
-
-/**
- * Mengekstrak ID folder Google Drive dari URL.
- * @param {string} url URL lengkap folder Google Drive.
- * @returns {string|null} ID folder yang diekstrak atau null jika tidak ditemukan.
- */
-function getFolderIdFromUrl(url) {
-    const match = url.match(/folders\/([a-zA-Z0-9_-]+)/);
-    return match ? match[1] : null;
-}
-
-const SHARED_DRIVE_FOLDER_ID = getFolderIdFromUrl(SHARED_DRIVE_FOLDER_URL);
 
 // --- INISIALISASI ---
 const app = initializeApp(firebaseConfig);
@@ -60,27 +47,23 @@ export const firestoreService = {
  */
 function getGapiToken() {
     return new Promise((resolve, reject) => {
-        // Jika kita memiliki token yang valid dan belum kedaluwarsa, langsung gunakan.
         if (gapiToken && gapiToken.expires_at > Date.now()) {
             return resolve(gapiToken.access_token);
         }
 
-        // Jika token tidak ada atau kedaluwarsa, minta yang baru.
         try {
             tokenClient.callback = (resp) => {
                 if (resp.error) {
-                    gapiToken = null; // Hapus token jika ada error
+                    gapiToken = null;
                     return reject(resp);
                 }
-                // Simpan token baru dan hitung waktu kedaluwarsanya
                 gapiToken = resp;
                 gapiToken.expires_at = Date.now() + (parseInt(resp.expires_in, 10) - 60) * 1000;
                 resolve(gapiToken.access_token);
             };
-            // Minta token secara "diam-diam" tanpa memaksa pop-up
             tokenClient.requestAccessToken({ prompt: '' });
         } catch (err) {
-            gapiToken = null; // Hapus token jika permintaan gagal
+            gapiToken = null;
             reject(err);
         }
     });
@@ -116,16 +99,14 @@ export const driveService = {
     uploadFile: (fileOrBlob, fileName) => {
         return new Promise(async (resolve, reject) => {
             if (!tokenClient) return reject(new Error("Google API belum diinisialisasi."));
-            if (!SHARED_DRIVE_FOLDER_ID) return reject(new Error("URL folder Google Drive tidak valid."));
 
             try {
-                // Gunakan fungsi manajemen token yang baru dan andal
                 const accessToken = await getGapiToken();
                 
                 const metadata = {
                     name: fileName || `drawing_${Date.now()}_${fileOrBlob.name}`,
                     mimeType: fileOrBlob.type,
-                    parents: [SHARED_DRIVE_FOLDER_ID]
+                    // Properti 'parents' telah dihapus untuk mengunggah ke folder utama
                 };
                 const form = new FormData();
                 form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
@@ -140,14 +121,12 @@ export const driveService = {
                 const fileData = await uploadResponse.json();
                 if (fileData.error) throw new Error(fileData.error.message);
 
-                // Atur izin agar file dapat dilihat oleh siapa saja
                 await fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}/permissions`, {
                     method: 'POST',
                     headers: new Headers({ 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ role: 'reader', type: 'anyone' }),
                 });
                 
-                // Ambil metadata file untuk mendapatkan tautan yang dapat disematkan (embeddable)
                 const fileMetadataResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}?fields=webContentLink`, {
                     headers: new Headers({ 'Authorization': `Bearer ${accessToken}` })
                 });
@@ -157,12 +136,10 @@ export const driveService = {
                     throw new Error('Tidak dapat mengambil tautan yang dapat disematkan setelah unggahan.');
                 }
                 
-                // Resolve dengan tautan yang benar dan andal
                 resolve(fileMetadata.webContentLink);
 
             } catch (error) {
                 console.error("Kesalahan Unggahan/Otentikasi:", error);
-                // Penting: Hapus token yang di-cache jika terjadi kegagalan
                 gapiToken = null; 
                 reject(error);
             }

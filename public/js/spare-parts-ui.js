@@ -1,6 +1,10 @@
 import { formatCurrency, showToast } from './utils.js';
 import { saveSparePart, deleteSparePart } from './spare-parts-store.js';
 
+// --- CHART INSTANCES ---
+let sparePartsStatusPieChart = null;
+let sparePartsProjectValueBarChart = null;
+
 // --- DOM ELEMENTS ---
 const tableBody = document.getElementById('spare-parts-table-body');
 const form = document.getElementById('spare-part-form');
@@ -20,6 +24,11 @@ const filterCategorySelect = document.getElementById('spare-part-filter-category
 // Modals
 const customAlert = document.getElementById('custom-alert');
 const alertCancelBtn = document.getElementById('alert-cancel');
+
+// --- NEW DASHBOARD ELEMENTS ---
+const keyMetricsContainer = document.getElementById('spare-parts-key-metrics-container');
+const pieChartCanvas = document.getElementById('spare-parts-status-pie-chart');
+const barChartCanvas = document.getElementById('spare-parts-project-value-bar-chart');
 
 
 // --- STATE ---
@@ -164,6 +173,92 @@ const renderTable = () => {
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600 dark:text-indigo-400">${formatCurrency(item.price * item.quantity)}</td>
             `;
             tableBody.appendChild(subRow);
+        }
+    });
+};
+
+// --- NEW DASHBOARD FUNCTION ---
+const updateDashboard = () => {
+    if (!keyMetricsContainer || !pieChartCanvas || !barChartCanvas) return;
+
+    const stats = {
+        totalProjects: new Set(allParts.map(p => p.projectName).filter(Boolean)).size,
+        totalItems: allParts.reduce((acc, curr) => acc + curr.items.length, 0),
+        totalValue: 0,
+        statusCounts: { 'Approval': 0, 'PO': 0, 'PP': 0, 'Incoming': 0 },
+        projectValues: {},
+        categoryCounts: { 'Mechanical': 0, 'Electrical': 0, 'Tools': 0 },
+    };
+
+    allParts.forEach(p => {
+        p.items.forEach(item => {
+            const value = (item.price || 0) * (item.quantity || 0);
+            stats.totalValue += value;
+            if (p.projectName) {
+                if (!stats.projectValues[p.projectName]) stats.projectValues[p.projectName] = 0;
+                stats.projectValues[p.projectName] += value;
+            }
+            if (item.category in stats.categoryCounts) {
+                stats.categoryCounts[item.category]++;
+            }
+        });
+        if (p.status in stats.statusCounts) {
+            stats.statusCounts[p.status]++;
+        }
+    });
+
+    keyMetricsContainer.innerHTML = `
+        <div class="themed-card p-6 rounded-2xl shadow-lg border flex items-center gap-4">
+            <div><p class="text-sm themed-text-secondary">Total Projects</p><p class="text-2xl font-bold themed-text-primary">${stats.totalProjects}</p></div>
+        </div>
+        <div class="themed-card p-6 rounded-2xl shadow-lg border flex items-center gap-4">
+            <div><p class="text-sm themed-text-secondary">Total Part Items</p><p class="text-2xl font-bold themed-text-primary">${stats.totalItems}</p></div>
+        </div>
+        <div class="themed-card p-6 rounded-2xl shadow-lg border flex items-center gap-4">
+            <div><p class="text-sm themed-text-secondary">Total Value</p><p class="text-2xl font-bold themed-text-primary">${formatCurrency(stats.totalValue)}</p></div>
+        </div>
+        <div class="themed-card p-6 rounded-2xl shadow-lg border">
+            <p class="text-sm themed-text-secondary mb-2">Items by Category</p>
+            <div class="flex flex-col gap-2">
+               <div><span class="text-xs">Mechanical:</span> <span class="font-semibold">${stats.categoryCounts.Mechanical}</span></div>
+               <div><span class="text-xs">Electrical:</span> <span class="font-semibold">${stats.categoryCounts.Electrical}</span></div>
+               <div><span class="text-xs">Tools:</span> <span class="font-semibold">${stats.categoryCounts.Tools}</span></div>
+            </div>
+        </div>
+    `;
+
+    const isDark = document.documentElement.classList.contains('dark');
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+    const textColor = isDark ? '#d1d5db' : '#5d4037';
+
+    if (sparePartsStatusPieChart) sparePartsStatusPieChart.destroy();
+    sparePartsStatusPieChart = new Chart(pieChartCanvas, {
+        type: 'pie',
+        data: {
+            labels: Object.keys(stats.statusCounts),
+            datasets: [{ data: Object.values(stats.statusCounts), backgroundColor: ['#f59e0b', '#3b82f6', '#8b5cf6', '#10b981'] }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'top', labels: { color: textColor } } } }
+    });
+
+    if (sparePartsProjectValueBarChart) sparePartsProjectValueBarChart.destroy();
+    sparePartsProjectValueBarChart = new Chart(barChartCanvas, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(stats.projectValues),
+            datasets: [{
+                label: 'Total Value (IDR)',
+                data: Object.values(stats.projectValues),
+                backgroundColor: '#10b981'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true, ticks: { color: textColor }, grid: { color: gridColor } },
+                x: { ticks: { color: textColor }, grid: { color: gridColor } }
+            },
+            plugins: { legend: { display: false } }
         }
     });
 };
@@ -327,5 +422,6 @@ export const initializeSparePartsUI = () => {
 export const updateSparePartsUI = (parts) => {
     allParts = parts;
     renderTable();
+    updateDashboard(); // Call the new dashboard function
 };
 

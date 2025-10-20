@@ -48,7 +48,7 @@ const handleLogout = () => {
 
 /**
  * Initializes the authentication listeners and UI.
- * @param {Function} onLogin - Callback function to run after a successful login.
+ * @param {Function} onLogin - Callback function to run after a successful login, passing the user's role.
  * @param {Function} onLogout - Callback function to run after a user logs out.
  */
 export const initializeAuth = (onLogin, onLogout) => {
@@ -80,3 +80,4 @@ export const initializeAuth = (onLogin, onLogout) => {
         }
     });
 };
+

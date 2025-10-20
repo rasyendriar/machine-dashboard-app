@@ -17,8 +17,10 @@ const searchPpInput = document.getElementById('spare-part-search-pp');
 const searchProjectInput = document.getElementById('spare-part-search-project');
 const filterCategorySelect = document.getElementById('spare-part-filter-category');
 
-// Modals (reusing from machine UI)
+// Modals
 const customAlert = document.getElementById('custom-alert');
+const alertCancelBtn = document.getElementById('alert-cancel');
+
 
 // --- STATE ---
 let allParts = [];
@@ -136,14 +138,16 @@ const renderTable = () => {
             <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-primary font-semibold" rowspan="${itemsToDisplay.length}">${part.status}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary" rowspan="${itemsToDisplay.length}">${part.poDate || '-'}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600 dark:text-indigo-400">${formatCurrency(firstItem.price * firstItem.quantity)}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium admin-only-inline-flex" rowspan="${itemsToDisplay.length}">
+            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium" rowspan="${itemsToDisplay.length}">
                 <div class="flex justify-center items-center gap-4">
-                     <button data-action="edit" data-id="${part.id}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300" title="Edit">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                    </button>
-                    <button data-action="delete" data-id="${part.id}" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                    </button>
+                     <span class="admin-only-inline-flex gap-4">
+                        <button data-action="edit" data-id="${part.id}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300" title="Edit">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                        <button data-action="delete" data-id="${part.id}" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
+                    </span>
                 </div>
             </td>
         `;
@@ -256,11 +260,15 @@ const handleTableClick = (e) => {
         
     } else if (action === 'delete') {
         itemToDeleteId = id;
-        customAlert.classList.remove('hidden'); // This assumes the delete confirmation modal is generic
+        customAlert.classList.remove('hidden');
     }
 };
 
-const confirmDelete = async () => {
+/**
+ * Handles the confirmation of a delete action.
+ * This is exported so main.js can call it.
+ */
+export const handleSparePartDelete = async () => {
     if (itemToDeleteId) {
         try {
             await deleteSparePart(itemToDeleteId);
@@ -270,7 +278,6 @@ const confirmDelete = async () => {
             showToast('Failed to delete item.', 'error');
         } finally {
             itemToDeleteId = null;
-            document.getElementById('alert-confirm').removeEventListener('click', confirmDelete);
             customAlert.classList.add('hidden');
         }
     }
@@ -294,7 +301,7 @@ export const initializeSparePartsUI = () => {
     
     // Listener for dynamic part rows
     partItemsContainer.addEventListener('click', (e) => {
-        if (e.target.classList.contains('remove-part-btn')) {
+        if (e.target.closest('.remove-part-btn')) {
             e.target.closest('.part-item-row').remove();
         }
     });
@@ -304,11 +311,9 @@ export const initializeSparePartsUI = () => {
         }
     });
 
-    // We need to know when the generic delete modal is confirmed FOR THIS CONTEXT
-    document.getElementById('alert-confirm').addEventListener('click', () => {
-        if (document.getElementById('spare-parts-tab').classList.contains('active')) {
-             confirmDelete();
-        }
+    alertCancelBtn.addEventListener('click', () => {
+        itemToDeleteId = null;
+        customAlert.classList.add('hidden');
     });
 
     // Initial setup
@@ -323,3 +328,4 @@ export const updateSparePartsUI = (parts) => {
     allParts = parts;
     renderTable();
 };
+

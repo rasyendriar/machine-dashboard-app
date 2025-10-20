@@ -75,7 +75,7 @@ function getFilteredData(purchases, fullReport = false) {
 }
 
 export function exportToXLSX(purchases) {
-    const dataToExport = getFilteredData(purchases, true);
+    const dataToExport = getFilteredData(purchases, true); 
     if (dataToExport.length === 0) {
         showToast("Tidak ada data yang tersedia untuk diekspor.", "error");
         return;
@@ -153,7 +153,7 @@ export function exportToPDF(purchases) {
             doc.setPage(i);
             doc.setFontSize(8);
             doc.setTextColor(150);
-            doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width - 25, doc.internal.pageSize.height - 10);
+            doc.text(`Halaman ${i} dari ${pageCount}`, doc.internal.pageSize.width - 30, doc.internal.pageSize.height - 10);
             doc.text(`Dibuat pada: ${reportDate}`, 15, doc.internal.pageSize.height - 10);
         }
     };
@@ -449,4 +449,3 @@ export function showDetailsModal(item) {
     document.getElementById('details-total-price').textContent = formatCurrency((item.negotiatedQuotation || 0) * (item.quantity || 0));
     elements.detailsModal.classList.remove('hidden');
 }
-

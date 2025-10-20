@@ -1,8 +1,8 @@
-import { handleAuthStateChange } from './auth.js';
-import { listenForMachinePurchases } from './machine-store.js';
-import { initializeMachineUI, updateMachineUI } from './machine-ui.js';
+import { initializeAuth } from './auth.js';
+import { listenForMachinePurchases, initializeGoogleDriveApi } from './machine-store.js';
+import { initializeMachineUI, updateMachineUI, handleMachineDelete } from './machine-ui.js';
 import { listenForSpareParts } from './spare-parts-store.js';
-import { initializeSparePartsUI, updateSparePartsUI } from './spare-parts-ui.js';
+import { initializeSparePartsUI, updateSparePartsUI, handleSparePartDelete } from './spare-parts-ui.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -21,8 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoPreview = document.getElementById('logo-preview');
     const exportPdfBtn = document.getElementById('export-pdf');
     const exportXlsxBtn = document.getElementById('export-xlsx');
-    const tabs = document.querySelectorAll('.tab-link');
+    const tabs = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
+    const alertConfirmBtn = document.getElementById('alert-confirm');
 
     // --- UNSUBSCRIBE FUNCTIONS ---
     let unsubscribeMachines = null;
@@ -49,20 +50,25 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeSparePartsUI();
 
     // The main entry point after user logs in or out
-    handleAuthStateChange((user, role) => {
-        // Detach previous listeners if they exist to prevent memory leaks on logout/login
+    initializeAuth((role) => {
+        // This is the ON LOGIN callback
         if (unsubscribeMachines) unsubscribeMachines();
         if (unsubscribeSpareParts) unsubscribeSpareParts();
-
-        if (user) {
-            // User is logged in, set up real-time data listeners
-            unsubscribeMachines = listenForMachinePurchases(updateMachineUI);
-            unsubscribeSpareParts = listenForSpareParts(updateSparePartsUI);
-        } else {
-            // User is logged out, no data to show. The UI modules will handle clearing their state.
-            updateMachineUI([]);
-            updateSparePartsUI([]);
+        
+        if (role === 'admin') {
+            initializeGoogleDriveApi(); // Initialize Google Drive API for admin users
         }
+        
+        // User is logged in, set up real-time data listeners
+        unsubscribeMachines = listenForMachinePurchases(updateMachineUI);
+        unsubscribeSpareParts = listenForSpareParts(updateSparePartsUI);
+
+    }, () => {
+        // This is the ON LOGOUT callback
+        if (unsubscribeMachines) unsubscribeMachines();
+        if (unsubscribeSpareParts) unsubscribeSpareParts();
+        updateMachineUI([]);
+        updateSparePartsUI([]);
     });
 
     // --- EVENT LISTENERS ---
@@ -72,7 +78,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.documentElement.classList.toggle('dark');
         localStorage.setItem('color-theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
         syncIconWithTheme();
-        // This will trigger a re-render of charts with new colors via the onSnapshot listener -> updateMachineUI
+        // Force chart redraw by briefly clearing data. The listener will immediately repopulate it.
+        if (typeof updateMachineUI === 'function') {
+           updateMachineUI(lastMachineData); 
+        }
     });
     
     // Dashboard panel visibility
@@ -86,15 +95,27 @@ document.addEventListener('DOMContentLoaded', () => {
     tabs.forEach(tab => {
         tab.addEventListener('click', (e) => {
             e.preventDefault();
-            tabs.forEach(t => t.classList.remove('active', 'themed-text-primary'));
+            tabs.forEach(t => t.classList.remove('active-tab'));
             tabContents.forEach(c => c.classList.add('hidden'));
 
-            tab.classList.add('active', 'themed-text-primary');
-            const targetContent = document.getElementById(tab.dataset.tabTarget);
+            tab.classList.add('active-tab');
+            const targetContent = document.getElementById(tab.dataset.tab);
             if(targetContent) {
                 targetContent.classList.remove('hidden');
             }
         });
+    });
+
+    // Centralized Delete Confirmation Handler
+    alertConfirmBtn.addEventListener('click', () => {
+        const activeTab = document.querySelector('.tab-btn.active-tab');
+        if (!activeTab) return;
+        
+        if (activeTab.id === 'tab-machine-purchase') {
+            handleMachineDelete();
+        } else if (activeTab.id === 'tab-spare-parts') {
+            handleSparePartDelete();
+        }
     });
 
     // Report modal functionality
@@ -121,12 +142,8 @@ document.addEventListener('DOMContentLoaded', () => {
         logoPreview.classList.remove('hidden');
     }
 
-    // TODO: Re-implement PDF and XLSX export functions if needed
-    // exportPdfBtn.addEventListener('click', exportToPDF);
-    // exportXlsxBtn.addEventListener('click', exportToXLSX);
-
-
     // --- INITIAL PAGE LOAD CHECKS ---
     checkDashboardVisibility();
     syncIconWithTheme();
 });
+

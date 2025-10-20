@@ -28,7 +28,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 let tokenClient;
-// **FIX:** Variable to cache the Google API token to prevent multiple logins.
 let gapiToken = null; 
 
 // --- AUTHENTICATION SERVICE ---
@@ -54,7 +53,6 @@ export const firestoreService = {
     }
 };
 
-// --- NEW: Token Management Function ---
 /**
  * Gets a valid Google API access token, refreshing it only when necessary.
  * This prevents the user from being prompted on every single upload.
@@ -62,23 +60,25 @@ export const firestoreService = {
  */
 function getGapiToken() {
     return new Promise((resolve, reject) => {
-        // If we have a valid token that hasn't expired, return it immediately.
         if (gapiToken && gapiToken.expires_at > Date.now()) {
             return resolve(gapiToken.access_token);
         }
 
-        // If the token is missing or expired, request a new one.
-        tokenClient.callback = (resp) => {
-            if (resp.error) {
-                return reject(resp);
-            }
-            // Store the new token and calculate its expiry time (adding a 60s buffer).
-            gapiToken = resp;
-            gapiToken.expires_at = Date.now() + (parseInt(resp.expires_in, 10) - 60) * 1000;
-            resolve(gapiToken.access_token);
-        };
-        // *** THE FINAL FIX: Change 'consent' to an empty string to allow silent token refresh. ***
-        tokenClient.requestAccessToken({ prompt: '' });
+        try {
+            tokenClient.callback = (resp) => {
+                if (resp.error) {
+                    gapiToken = null; // Clear token on any error
+                    return reject(resp);
+                }
+                gapiToken = resp;
+                gapiToken.expires_at = Date.now() + (parseInt(resp.expires_in, 10) - 60) * 1000;
+                resolve(gapiToken.access_token);
+            };
+            tokenClient.requestAccessToken({ prompt: '' });
+        } catch (err) {
+            gapiToken = null; // Clear token if the request itself fails
+            reject(err);
+        }
     });
 }
 
@@ -133,34 +133,29 @@ export const driveService = {
                 });
 
                 const fileData = await uploadResponse.json();
-                if (fileData.error) return reject(new Error(fileData.error.message));
+                if (fileData.error) throw new Error(fileData.error.message);
 
-                // Set file permission to be publicly readable
                 await fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}/permissions`, {
                     method: 'POST',
                     headers: new Headers({ 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ role: 'reader', type: 'anyone' }),
                 });
                 
-                // *** THE FIX: Make a second API call to get the correct embeddable link ***
                 const fileMetadataResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}?fields=webContentLink`, {
                     headers: new Headers({ 'Authorization': `Bearer ${accessToken}` })
                 });
 
                 const fileMetadata = await fileMetadataResponse.json();
                 if (fileMetadata.error || !fileMetadata.webContentLink) {
-                    return reject(new Error('Could not retrieve embeddable link after upload.'));
+                    throw new Error('Could not retrieve embeddable link after upload.');
                 }
                 
-                // Resolve with the correct link for direct embedding.
                 resolve(fileMetadata.webContentLink);
 
             } catch (error) {
                 console.error("Upload/Auth Error:", error);
-                // If an auth error occurs, clear the cached token to force a refresh on the next attempt.
-                if (error && error.type === 'token') {
-                    gapiToken = null; 
-                }
+                // **IMPORTANT**: Clear the cached token on ANY failure in the process.
+                gapiToken = null; 
                 reject(error);
             }
         });
@@ -188,3 +183,4 @@ export const driveService = {
         }
     }
 };
+

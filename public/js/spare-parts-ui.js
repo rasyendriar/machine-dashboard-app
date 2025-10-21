@@ -23,6 +23,9 @@ const filterCategorySelect = document.getElementById('spare-part-filter-category
 // Modals
 const customAlert = document.getElementById('custom-alert');
 const alertCancelBtn = document.getElementById('alert-cancel');
+const alertMessage = document.getElementById('alert-message');
+const alertTitle = document.getElementById('alert-title');
+
 
 // NEW DASHBOARD ELEMENTS
 const keyMetricsContainer = document.getElementById('spare-parts-key-metrics-container');
@@ -469,7 +472,11 @@ const handleTableClick = (e) => {
         form.scrollIntoView({ behavior: 'smooth' });
         
     } else if (action === 'delete') {
+        const part = allParts.find(p => p.id === id);
+        if (!part) return;
         itemToDeleteId = id;
+        alertTitle.textContent = `Delete PP '${part.ppNumber}'?`;
+        alertMessage.textContent = `Are you sure you want to delete the entire record for PP ${part.ppNumber}? This will remove all ${part.items.length} part(s) associated with it. This action cannot be undone.`;
         customAlert.classList.remove('hidden');
     }
 };
@@ -534,4 +541,3 @@ export const getAllSpareParts = () => {
 export const redrawSparePartsDashboard = () => {
     updateDashboard();
 };
-

@@ -236,13 +236,14 @@ const updateDashboard = () => {
 
 const handleFormSubmit = async (e) => {
     e.preventDefault();
+    const originalBtnText = editIdInput.value ? 'Update Item' : 'Add Item';
     submitBtn.disabled = true;
     submitBtnText.textContent = 'Saving...';
 
     if (!form['machine-no-drawing'].value || !form['machine-item-name'].value || !form['machine-quantity'].value) {
         showToast('Please fill all required fields.', 'error');
         submitBtn.disabled = false;
-        submitBtnText.textContent = 'Add Item';
+        submitBtnText.textContent = originalBtnText;
         return;
     }
 
@@ -256,7 +257,7 @@ const handleFormSubmit = async (e) => {
             console.error("Error uploading image: ", error);
             showToast(error.message || 'Image upload failed.', 'error');
             submitBtn.disabled = false;
-            submitBtnText.textContent = id ? 'Update Item' : 'Add Item';
+            submitBtnText.textContent = originalBtnText;
             return;
         }
     }
@@ -292,7 +293,7 @@ const handleFormSubmit = async (e) => {
         showToast('Data saving error. See console for details.', 'error');
     } finally {
         submitBtn.disabled = false;
-        submitBtnText.textContent = editIdInput.value ? 'Update Item' : 'Add Item';
+        submitBtnText.textContent = originalBtnText;
     }
 };
 
@@ -522,3 +523,4 @@ export const getAllPurchases = () => {
 export const redrawMachineDashboard = () => {
     updateDashboard();
 };
+

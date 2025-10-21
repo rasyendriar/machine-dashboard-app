@@ -177,13 +177,44 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 
 /* General UI styles */
 .required-label::after { content: '*'; color: #ef4444; margin-left: 4px; }
-/* STICKY HEADER FIX: Changed overflow-y to overflow */
+
+/* === STICKY HEADER AND COLUMN FIX === */
 .table-container { 
     max-height: 60vh; 
-    overflow: clip; /* This prevents overflow from interfering with sticky */
-    overflow-y: auto; /* Re-add vertical scroll */
+    overflow: auto; /* Changed from clip/overflow-y to auto for both directions */
 }
-.sticky-header th { position: sticky; top: 0; z-index: 10; }
+.sticky-header th { 
+    position: sticky; 
+    top: 0; 
+    z-index: 10; 
+}
+.sticky-col-right {
+    position: sticky;
+    right: 0;
+    z-index: 5; /* Lower z-index than header */
+}
+/* We need to set a background on the sticky column to hide content behind it */
+.themed-card .sticky-col-right {
+    background-color: var(--card-light);
+}
+html.dark .themed-card .sticky-col-right {
+    background-color: var(--card-dark);
+}
+.themed-zebra tr:nth-child(even) .sticky-col-right {
+    background-color: var(--zebra-light);
+}
+html.dark .themed-zebra tr:nth-child(even) .sticky-col-right {
+    background-color: var(--zebra-dark);
+}
+/* Ensure the sticky header column has the highest priority */
+.sticky-header .sticky-col-right {
+    z-index: 11;
+    background-color: var(--header-light);
+}
+html.dark .sticky-header .sticky-col-right {
+    background-color: var(--header-dark);
+}
+/* === END FIX === */
 
 /* Animations */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -253,4 +284,3 @@ html.dark .form-btn-secondary:hover {
 html.dark .table-header {
     color: var(--text-secondary-dark);
 }
-

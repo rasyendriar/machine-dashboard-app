@@ -26,10 +26,10 @@
 <body class="themed-bg themed-text-primary transition-colors duration-300">
 
     <!-- Login Section -->
-    <div id="login-section" class="min-h-screen flex items-center justify-center">
+    <div id="login-section" class="min-h-screen flex items-center justify-center p-4">
         <div class="themed-card p-8 rounded-2xl shadow-lg border w-full max-w-sm">
             <div class="flex items-center justify-center gap-4 mb-6">
-                 <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-600"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18M6 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2"/><path d="M18 18h2a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2"/><path d="M10 14v-2"/><path d="M7 14v-2"/><path d="M16 12h-2"/><path d="M14 12h-2"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-500"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                 <h1 class="text-2xl font-bold themed-text-primary">Dashboard Login</h1>
             </div>
             <form id="login-form" class="space-y-4">
@@ -42,7 +42,7 @@
                     <input type="password" id="password" name="password" class="themed-input mt-1 block w-full" required>
                 </div>
                  <p id="login-error" class="text-sm text-red-500 hidden">Invalid email or password.</p>
-                <button type="submit" class="w-full form-btn-primary">
+                <button type="submit" class="w-full form-btn-primary justify-center">
                     Login
                 </button>
             </form>
@@ -53,44 +53,46 @@
     <div id="app-section" class="hidden">
         <!-- Collapsible Sidebar -->
         <aside id="sidebar" class="sidebar">
-            <div class="p-4 flex items-center gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-500 flex-shrink-0"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18M6 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2"/><path d="M18 18h2a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2"/><path d="M10 14v-2"/><path d="M7 14v-2"/><path d="M16 12h-2"/><path d="M14 12h-2"/></svg>
-                <span class="sidebar-text text-xl font-bold themed-text-primary">Dashboard</span>
+            <div class="p-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-500 flex-shrink-0"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18M6 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2"/><path d="M18 18h2a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2"/><path d="M10 14v-2"/><path d="M7 14v-2"/><path d="M16 12h-2"/><path d="M14 12h-2"/></svg>
+                    <span class="sidebar-text text-xl font-bold themed-text-primary">Dashboard</span>
+                </div>
             </div>
-            <nav class="mt-4">
-                <button data-tab="machine-purchase-section" class="nav-link active-nav">
+            <nav class="mt-4 flex-grow">
+                <button data-tab="machine-purchase-section" class="nav-link active-nav w-full">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
                     <span class="sidebar-text">Machine Purchase</span>
                 </button>
-                <button data-tab="spare-parts-section" class="nav-link">
+                <button data-tab="spare-parts-section" class="nav-link w-full">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><path d="M21.13 5.87a7.002 7.002 0 0 0-9.9-9.9"/><path d="M12 12a7.002 7.002 0 0 0-9.9 9.9"/><circle cx="12" cy="12" r="10"/><path d="M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="m15.5 15.5-1.5-1.5"/></svg>
                     <span class="sidebar-text">Spare Parts</span>
                 </button>
             </nav>
+            <div class="p-4 border-t themed-border">
+                <button id="logout-btn" class="nav-link w-full">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    <span class="sidebar-text">Logout</span>
+                </button>
+            </div>
         </aside>
 
         <!-- Main Content Wrapper -->
         <div id="main-content" class="main-content">
             <!-- Header -->
-            <header class="relative mb-6 flex justify-between items-center w-full">
+            <header class="sticky top-0 z-30 bg-opacity-80 backdrop-blur-md themed-bg -mx-8 px-8 py-4 mb-6 flex justify-between items-center w-full border-b themed-border">
                 <div class="flex items-center gap-4">
                     <button id="sidebar-toggle" class="p-2 rounded-md themed-text-secondary hover:bg-stone-200 dark:hover:bg-gray-700">
                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                     </button>
                     <div>
-                        <h1 class="text-3xl md:text-4xl font-bold themed-text-primary text-left">Monitoring Dashboard</h1>
-                        <p id="header-subtitle" class="themed-text-secondary text-left">Monitor and manage all purchase orders efficiently.</p>
+                        <h1 id="header-title" class="text-2xl font-bold themed-text-primary text-left">Machine Purchasing</h1>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
                     <button id="toggle-dashboard-btn" type="button" class="themed-text-secondary hover:bg-stone-200 dark:hover:bg-gray-700 rounded-lg p-2.5" title="Toggle Dashboard Panel">
                         <svg id="toggle-dashboard-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
-                        </svg>
-                    </button>
-                    <button id="logout-btn" type="button" class="themed-text-secondary hover:bg-stone-200 dark:hover:bg-gray-700 rounded-lg p-2.5" title="Logout">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
                     <button id="theme-toggle" type="button" class="themed-text-secondary hover:bg-stone-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-stone-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5">
@@ -101,7 +103,7 @@
             </header>
 
             <!-- Main Content Area -->
-            <main>
+            <main class="px-8 pb-8">
                 <!-- =============================== -->
                 <!-- MACHINE PURCHASE SECTION        -->
                 <!-- =============================== -->
@@ -209,6 +211,7 @@
                             <div class="md:col-span-2 lg:col-span-4 flex items-center justify-end space-x-4">
                                 <button type="button" id="machine-cancel-edit-btn" class="form-btn-secondary hidden">Cancel</button>
                                 <button type="submit" id="machine-submit-btn" class="form-btn-primary">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                     <span id="machine-submit-btn-text">Add Item</span>
                                 </button>
                             </div>
@@ -224,12 +227,13 @@
                                     <option value="all">All Projects</option>
                                 </select>
                                 <input type="text" id="machine-search-input" placeholder="Search records..." class="themed-input w-full sm:w-64">
-                                <button id="export-report-btn" class="form-btn-primary admin-only-inline-flex">
+                                <button id="export-report-btn" class="form-btn-primary whitespace-nowrap admin-only-inline-flex">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                     Export
                                 </button>
                             </div>
                         </div>
-                        <div class="overflow-y-auto table-container rounded-lg border themed-border">
+                        <div class="table-container rounded-lg border themed-border">
                             <table class="min-w-full divide-y themed-border">
                                 <thead class="themed-header sticky-header">
                                     <tr>
@@ -241,12 +245,13 @@
                                         <th class="table-header">Progress Status</th>
                                         <th class="table-header">Purchasing Status</th>
                                         <th class="table-header">Total Price</th>
-                                        <th class="table-header text-center">Actions</th>
+                                        <th class="table-header text-center sticky-col-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="machine-purchase-table-body" class="themed-card divide-y themed-border themed-zebra"></tbody>
                             </table>
                             <div id="machine-no-data-message" class="text-center themed-text-secondary py-16 hidden">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                 <h3 class="mt-2 text-sm font-medium themed-text-primary">No records found</h3>
                                 <p class="mt-1 text-sm themed-text-secondary">Add a new machine purchase to get started.</p>
                             </div>
@@ -360,7 +365,7 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="overflow-y-auto table-container rounded-lg border themed-border">
+                        <div class="table-container rounded-lg border themed-border">
                             <table class="min-w-full divide-y themed-border">
                                 <thead class="themed-header sticky-header">
                                     <tr>
@@ -372,7 +377,7 @@
                                         <th class="table-header">Status</th>
                                         <th class="table-header">PO Date</th>
                                         <th class="table-header">Total Price</th>
-                                        <th class="table-header text-center">Actions</th>
+                                        <th class="table-header text-center sticky-col-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="spare-parts-table-body" class="themed-card divide-y themed-border themed-zebra"></tbody>
@@ -479,4 +484,3 @@
 
 </body>
 </html>
-

@@ -388,6 +388,7 @@ export const exportSparePartsToPDF = () => {
 
 const handleFormSubmit = async (e) => {
     e.preventDefault();
+    const originalBtnText = editIdInput.value ? 'Update Purchase' : 'Add Purchase';
     submitBtn.disabled = true;
     submitBtnText.textContent = 'Saving...';
 
@@ -416,7 +417,7 @@ const handleFormSubmit = async (e) => {
     if (!isFormValid || items.length === 0) {
         showToast('Please fill all required fields for each part.', 'error');
         submitBtn.disabled = false;
-        submitBtnText.textContent = 'Add Purchase';
+        submitBtnText.textContent = originalBtnText;
         return;
     }
 
@@ -440,7 +441,7 @@ const handleFormSubmit = async (e) => {
         showToast('Data saving error.', 'error');
     } finally {
         submitBtn.disabled = false;
-        submitBtnText.textContent = id ? 'Update Purchase' : 'Add Purchase';
+        submitBtnText.textContent = originalBtnText;
     }
 };
 
@@ -541,3 +542,4 @@ export const getAllSpareParts = () => {
 export const redrawSparePartsDashboard = () => {
     updateDashboard();
 };
+

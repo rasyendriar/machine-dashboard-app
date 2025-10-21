@@ -471,6 +471,7 @@ const handleTableClick = (e) => {
         submitBtnText.textContent = 'Update Purchase';
         cancelEditBtn.classList.remove('hidden');
         form.scrollIntoView({ behavior: 'smooth' });
+        form['spare-part-pp-number'].focus();
         
     } else if (action === 'delete') {
         const part = allParts.find(p => p.id === id);
@@ -542,4 +543,5 @@ export const getAllSpareParts = () => {
 export const redrawSparePartsDashboard = () => {
     updateDashboard();
 };
+
 

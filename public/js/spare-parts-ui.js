@@ -25,7 +25,7 @@ const filterCategorySelect = document.getElementById('spare-part-filter-category
 const customAlert = document.getElementById('custom-alert');
 const alertCancelBtn = document.getElementById('alert-cancel');
 
-// --- NEW DASHBOARD ELEMENTS ---
+// NEW DASHBOARD ELEMENTS
 const keyMetricsContainer = document.getElementById('spare-parts-key-metrics-container');
 const pieChartCanvas = document.getElementById('spare-parts-status-pie-chart');
 const barChartCanvas = document.getElementById('spare-parts-project-value-bar-chart');
@@ -45,8 +45,8 @@ const createPartItemRow = (item = {}) => {
     const div = document.createElement('div');
     div.className = 'grid grid-cols-1 md:grid-cols-4 gap-4 border-t themed-border pt-4 mt-4 part-item-row';
     div.innerHTML = `
-        <div class="md:col-span-4">
-            <button type="button" class="float-right text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-500 remove-part-btn">&times; Remove</button>
+        <div class="md:col-span-4 flex justify-end">
+            <button type="button" class="text-sm text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-500 remove-part-btn font-semibold">Remove</button>
         </div>
         <div>
             <label class="block text-sm font-medium themed-text-secondary required-label">Product Name</label>
@@ -118,7 +118,6 @@ const renderTable = () => {
     const searchProject = searchProjectInput.value.toLowerCase();
     const filterCategory = filterCategorySelect.value;
 
-    // First, filter the individual parts
     const filteredParts = allParts.filter(part => {
         const ppMatch = !searchPp || (part.ppNumber && part.ppNumber.toLowerCase().includes(searchPp));
         const projectMatch = !searchProject || (part.projectName && part.projectName.toLowerCase().includes(searchProject));
@@ -135,26 +134,30 @@ const renderTable = () => {
             : part.items.filter(item => item.category === filterCategory);
         
         const firstItem = itemsToDisplay[0];
-        if (!firstItem) return; // Skip if category filter removes all items
+        if (!firstItem) return;
 
+        const totalItemsInPP = itemsToDisplay.length;
+        const totalGrandPrice = part.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+        
         const row = document.createElement('tr');
+        row.className = 'fade-in-row';
         row.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary" rowspan="${itemsToDisplay.length}">${part.ppNumber || '-'}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary" rowspan="${itemsToDisplay.length}">${part.projectName || '-'}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary" rowspan="${totalItemsInPP}">${part.ppNumber || '-'}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary" rowspan="${totalItemsInPP}">${part.projectName || '-'}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${firstItem.productName}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${firstItem.category}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary text-center">${firstItem.quantity}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-primary font-semibold" rowspan="${itemsToDisplay.length}">${part.status}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary" rowspan="${itemsToDisplay.length}">${part.poDate || '-'}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600 dark:text-indigo-400">${formatCurrency(firstItem.price * firstItem.quantity)}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium sticky-col-right" rowspan="${itemsToDisplay.length}">
+            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-primary font-semibold" rowspan="${totalItemsInPP}">${part.status}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary" rowspan="${totalItemsInPP}">${part.poDate || '-'}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600 dark:text-indigo-400" rowspan="${totalItemsInPP}">${formatCurrency(totalGrandPrice)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium sticky-col-right" rowspan="${totalItemsInPP}">
                 <div class="flex justify-center items-center gap-4">
                      <span class="admin-only-inline-flex gap-4">
                         <button data-action="edit" data-id="${part.id}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300" title="Edit">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
                         <button data-action="delete" data-id="${part.id}" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                         </button>
                     </span>
                 </div>
@@ -162,22 +165,21 @@ const renderTable = () => {
         `;
         tableBody.appendChild(row);
         
-        // Add subsequent rows for the same PP number
         for(let i = 1; i < itemsToDisplay.length; i++) {
             const item = itemsToDisplay[i];
             const subRow = document.createElement('tr');
+            subRow.className = 'fade-in-row';
             subRow.innerHTML = `
                 <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.productName}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.category}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary text-center">${item.quantity}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600 dark:text-indigo-400">${formatCurrency(item.price * item.quantity)}</td>
             `;
             tableBody.appendChild(subRow);
         }
     });
 };
 
-// --- NEW DASHBOARD FUNCTION ---
+// NEW DASHBOARD FUNCTION
 const updateDashboard = () => {
     if (!keyMetricsContainer || !pieChartCanvas || !barChartCanvas) return;
 
@@ -209,12 +211,15 @@ const updateDashboard = () => {
 
     keyMetricsContainer.innerHTML = `
         <div class="themed-card p-6 rounded-2xl shadow-lg border flex items-center gap-4">
+            <div class="bg-teal-100 dark:bg-teal-900/50 p-3 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-teal-600 dark:text-teal-300"><path d="M6 9l6 6 6-6"/></svg></div>
             <div><p class="text-sm themed-text-secondary">Total Projects</p><p class="text-2xl font-bold themed-text-primary">${stats.totalProjects}</p></div>
         </div>
         <div class="themed-card p-6 rounded-2xl shadow-lg border flex items-center gap-4">
+             <div class="bg-sky-100 dark:bg-sky-900/50 p-3 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-sky-600 dark:text-sky-300"><path d="M21.13 5.87a7.002 7.002 0 0 0-9.9-9.9"/><path d="M12 12a7.002 7.002 0 0 0-9.9 9.9"/><circle cx="12" cy="12" r="10"/><path d="M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="m15.5 15.5-1.5-1.5"/></svg></div>
             <div><p class="text-sm themed-text-secondary">Total Part Items</p><p class="text-2xl font-bold themed-text-primary">${stats.totalItems}</p></div>
         </div>
         <div class="themed-card p-6 rounded-2xl shadow-lg border flex items-center gap-4">
+             <div class="bg-amber-100 dark:bg-amber-900/50 p-3 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-amber-600 dark:text-amber-300"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
             <div><p class="text-sm themed-text-secondary">Total Value</p><p class="text-2xl font-bold themed-text-primary">${formatCurrency(stats.totalValue)}</p></div>
         </div>
         <div class="themed-card p-6 rounded-2xl shadow-lg border">
@@ -394,7 +399,6 @@ export const initializeSparePartsUI = () => {
     searchProjectInput.addEventListener('input', renderTable);
     filterCategorySelect.addEventListener('change', renderTable);
     
-    // Listener for dynamic part rows
     partItemsContainer.addEventListener('click', (e) => {
         if (e.target.closest('.remove-part-btn')) {
             e.target.closest('.part-item-row').remove();
@@ -411,7 +415,6 @@ export const initializeSparePartsUI = () => {
         customAlert.classList.add('hidden');
     });
 
-    // Initial setup
     resetForm();
 };
 
@@ -422,5 +425,22 @@ export const initializeSparePartsUI = () => {
 export const updateSparePartsUI = (parts) => {
     allParts = parts;
     renderTable();
-    updateDashboard(); // Call the new dashboard function
+    updateDashboard();
 };
+
+/**
+ * Returns the current state of the spare parts.
+ * @returns {Array<object>}
+ */
+export const getAllSpareParts = () => {
+    return allParts;
+};
+
+/**
+ * Redraws the dashboard with the current data.
+ * Useful for theme changes.
+ */
+export const redrawSparePartsDashboard = () => {
+    updateDashboard();
+};
+

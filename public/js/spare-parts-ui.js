@@ -26,6 +26,13 @@ const alertCancelBtn = document.getElementById('alert-cancel');
 const alertMessage = document.getElementById('alert-message');
 const alertTitle = document.getElementById('alert-title');
 
+// Import Modal Elements (shared across modules, handled in main.js)
+const importModal = document.getElementById('import-modal');
+const importFileInput = document.getElementById('import-file-input');
+const importPreviewContainer = document.getElementById('import-preview-container');
+const importPreviewTable = document.getElementById('import-preview-table');
+const confirmImportBtn = document.getElementById('confirm-import-btn');
+
 
 // NEW DASHBOARD ELEMENTS
 const keyMetricsContainer = document.getElementById('spare-parts-key-metrics-container');
@@ -36,6 +43,7 @@ const barChartCanvas = document.getElementById('spare-parts-project-value-bar-ch
 // --- STATE ---
 let allParts = [];
 let itemToDeleteId = null;
+let parsedImportData = []; // To hold data from the imported file for confirmation
 
 // --- PRIVATE FUNCTIONS ---
 
@@ -162,7 +170,7 @@ const renderTable = () => {
 
     tableBody.innerHTML = '';
     noDataMessage.classList.toggle('hidden', filteredData.length > 0);
-
+    
     filteredData.forEach(item => {
         const row = document.createElement('tr');
         row.className = 'fade-in-row';
@@ -488,6 +496,76 @@ export const handleSparePartDelete = async () => {
     }
 };
 
+/**
+ * Handles the file import process.
+ */
+const handleFileImport = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+            if (jsonData.length < 2) {
+                showToast("The file is empty or has no data rows.", "error");
+                return;
+            }
+
+            const headers = jsonData[0].map(h => h.trim().toLowerCase());
+            const dataRows = jsonData.slice(1);
+
+            parsedImportData = dataRows.map(row => {
+                const rowData = {};
+                headers.forEach((header, index) => {
+                    const key = header.replace(/\s+/g, ''); // "PP Number" -> "ppnumber"
+                    rowData[key] = row[index];
+                });
+                return rowData;
+            });
+
+            displayImportPreview(headers, dataRows);
+        } catch (error) {
+            console.error("Error reading file:", error);
+            showToast("Failed to read or parse the file.", "error");
+        }
+    };
+    reader.onerror = () => {
+        showToast("Error reading the file.", "error");
+    };
+    reader.readAsArrayBuffer(file);
+};
+
+/**
+ * Displays a preview of the imported data in the modal.
+ * @param {Array<string>} headers - The column headers.
+ * @param {Array<Array<any>>} dataRows - The data rows.
+ */
+const displayImportPreview = (headers, dataRows) => {
+    let tableHTML = `<table class="min-w-full divide-y themed-border">
+        <thead class="themed-header"><tr>`;
+    headers.forEach(header => {
+        tableHTML += `<th class="px-4 py-2 text-left text-xs font-medium themed-text-secondary uppercase tracking-wider">${header}</th>`;
+    });
+    tableHTML += `</tr></thead><tbody class="themed-card divide-y themed-border">`;
+    dataRows.forEach(row => {
+        tableHTML += `<tr>`;
+        row.forEach(cell => {
+            tableHTML += `<td class="px-4 py-2 whitespace-nowrap text-sm themed-text-secondary">${cell || ''}</td>`;
+        });
+        tableHTML += `</tr>`;
+    });
+    tableHTML += `</tbody></table>`;
+
+    importPreviewTable.innerHTML = tableHTML;
+    importPreviewContainer.classList.remove('hidden');
+    confirmImportBtn.classList.remove('hidden');
+};
+
 
 // --- PUBLIC API ---
 
@@ -517,6 +595,10 @@ export const initializeSparePartsUI = () => {
         customAlert.classList.add('hidden');
     });
 
+    // Event listener for the file input change.
+    importFileInput.addEventListener('change', handleFileImport);
+
+
     resetForm();
 };
 
@@ -532,5 +614,25 @@ export const getAllSpareParts = () => {
 
 export const redrawSparePartsDashboard = () => {
     updateDashboard();
+};
+
+/**
+ * Returns the parsed data from the last imported file.
+ * This will be called by main.js to pass to the store.
+ * @returns {Array<object>}
+ */
+export const getParsedImportData = () => {
+    return parsedImportData;
+};
+
+/**
+ * Resets the import modal to its initial state.
+ */
+export const resetImportModal = () => {
+    importFileInput.value = ''; // Clear the file input
+    importPreviewContainer.classList.add('hidden');
+    confirmImportBtn.classList.add('hidden');
+    importPreviewTable.innerHTML = '';
+    parsedImportData = [];
 };
 

@@ -12,7 +12,7 @@ body {
     --text-secondary-light: #8d6e63;
     --border-light: #d7ccc8;
     --header-light: #efebe9;
-    --zebra-light: #efebe9;
+    --zebra-light: #f3f2ef;
     --input-bg-light: #fff;
     --input-border-light: #d1d5db; /* gray-300 */
     --accent-color: #4f46e5; /* indigo-600 */
@@ -27,7 +27,7 @@ html.dark {
     --text-secondary-dark: #9ca3af;
     --border-dark: #374151;
     --header-dark: #374151;
-    --zebra-dark: #1f2937;
+    --zebra-dark: #273345;
     --input-bg-dark: #374151; /* gray-700 */
     --input-border-dark: #4b5563; /* gray-600 */
     --accent-color: #6366f1; /* indigo-500 */
@@ -46,6 +46,8 @@ html.dark {
     transition: all 0.3s ease-in-out;
     z-index: 40;
     overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
 }
 html.dark .sidebar {
     background-color: var(--sidebar-bg-dark);
@@ -60,18 +62,18 @@ html.dark .sidebar {
     pointer-events: none;
 }
 .main-content {
-    padding-left: 260px; /* Match sidebar width */
-    transition: padding-left 0.3s ease-in-out;
+    margin-left: 260px; /* Match sidebar width */
+    transition: margin-left 0.3s ease-in-out;
 }
 .main-content.collapsed {
-    padding-left: 80px; /* Match collapsed sidebar width */
+    margin-left: 80px; /* Match collapsed sidebar width */
 }
 .nav-link {
     display: flex;
     align-items: center;
     gap: 1rem;
     padding: 0.75rem 1.5rem;
-    margin: 0.5rem;
+    margin: 0.25rem 0.5rem;
     border-radius: 0.5rem;
     font-weight: 600;
     color: var(--text-secondary-light);
@@ -91,11 +93,10 @@ html.dark .nav-link:hover {
 }
 .nav-link.active-nav {
     background-color: var(--accent-color);
-    color: white;
+    color: white !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
-html.dark .nav-link.active-nav {
-    color: white;
-}
+
 .sidebar-text {
     transition: opacity 0.2s ease, width 0.2s ease;
     opacity: 1;
@@ -117,7 +118,7 @@ html.dark .nav-link.active-nav {
     padding: 0.5rem 0.75rem;
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
-.themed-input:focus {
+.themed-input:focus, select.themed-input:focus {
     --tw-ring-color: var(--accent-color);
     border-color: var(--accent-color);
     box-shadow: 0 0 0 1px var(--accent-color);
@@ -178,10 +179,9 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 /* General UI styles */
 .required-label::after { content: '*'; color: #ef4444; margin-left: 4px; }
 
-/* === STICKY HEADER AND COLUMN FIX === */
+/* STICKY HEADER & COLUMN FIX */
 .table-container { 
-    max-height: 60vh; 
-    overflow: auto; /* Changed from clip/overflow-y to auto for both directions */
+    overflow: auto; /* Changed from clip to auto */
 }
 .sticky-header th { 
     position: sticky; 
@@ -191,30 +191,19 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 .sticky-col-right {
     position: sticky;
     right: 0;
-    z-index: 5; /* Lower z-index than header */
-}
-/* We need to set a background on the sticky column to hide content behind it */
-.themed-card .sticky-col-right {
+    z-index: 10;
     background-color: var(--card-light);
 }
-html.dark .themed-card .sticky-col-right {
+html.dark .sticky-col-right {
     background-color: var(--card-dark);
 }
-.themed-zebra tr:nth-child(even) .sticky-col-right {
+tr:nth-child(even) .sticky-col-right {
     background-color: var(--zebra-light);
 }
-html.dark .themed-zebra tr:nth-child(even) .sticky-col-right {
+html.dark tr:nth-child(even) .sticky-col-right {
     background-color: var(--zebra-dark);
 }
-/* Ensure the sticky header column has the highest priority */
-.sticky-header .sticky-col-right {
-    z-index: 11;
-    background-color: var(--header-light);
-}
-html.dark .sticky-header .sticky-col-right {
-    background-color: var(--header-dark);
-}
-/* === END FIX === */
+
 
 /* Animations */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -242,10 +231,11 @@ body.is-admin .admin-only-inline-flex { display: inline-flex; }
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    background-color: #4f46e5; /* indigo-600 */
+    background-color: var(--accent-color);
     color: white;
-    padding: 0.5rem 1.5rem;
+    padding: 0.625rem 1.5rem; /* Increased padding */
     border-radius: 0.5rem;
+    font-weight: 500;
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     transition: background-color 0.2s;
 }
@@ -253,10 +243,14 @@ body.is-admin .admin-only-inline-flex { display: inline-flex; }
     background-color: #4338ca; /* indigo-700 */
 }
 .form-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     background-color: #e5e7eb; /* gray-200 */
     color: #1f2937; /* gray-800 */
-    padding: 0.5rem 1.5rem;
+    padding: 0.625rem 1.5rem; /* Increased padding */
     border-radius: 0.5rem;
+    font-weight: 500;
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     transition: background-color 0.2s;
 }
@@ -276,7 +270,7 @@ html.dark .form-btn-secondary:hover {
     padding: 0.75rem 1.5rem;
     text-align: left;
     font-size: 0.75rem;
-    font-weight: 500;
+    font-weight: 600; /* Increased font weight */
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-secondary-light);
@@ -284,3 +278,4 @@ html.dark .form-btn-secondary:hover {
 html.dark .table-header {
     color: var(--text-secondary-dark);
 }
+

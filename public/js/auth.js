@@ -7,6 +7,9 @@ const loginSection = document.getElementById('login-section');
 const appSection = document.getElementById('app-section');
 const loginForm = document.getElementById('login-form');
 const logoutBtn = document.getElementById('logout-btn');
+const loginBtn = document.getElementById('login-btn');
+const loginBtnText = document.getElementById('login-btn-text');
+
 
 /**
  * Sets up the UI based on the user's role.
@@ -29,6 +32,9 @@ const handleLogin = async (e) => {
     const password = loginForm.password.value;
     const loginError = document.getElementById('login-error');
 
+    loginBtn.disabled = true;
+    loginBtnText.textContent = 'Logging in...';
+
     try {
         await signInWithEmailAndPassword(auth, email, password);
         loginError.classList.add('hidden');
@@ -36,6 +42,9 @@ const handleLogin = async (e) => {
         console.error("Login failed:", error.message);
         loginError.classList.remove('hidden');
         showToast('Invalid email or password.', 'error');
+    } finally {
+        loginBtn.disabled = false;
+        loginBtnText.textContent = 'Login';
     }
 };
 

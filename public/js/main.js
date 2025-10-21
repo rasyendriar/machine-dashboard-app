@@ -1,8 +1,8 @@
 import { initializeAuth } from './auth.js';
 import { listenForMachinePurchases, initializeGoogleDriveApi } from './machine-store.js';
-import { initializeMachineUI, updateMachineUI, handleMachineDelete, getAllPurchases, redrawMachineDashboard } from './machine-ui.js';
+import { initializeMachineUI, updateMachineUI, handleMachineDelete, redrawMachineDashboard, exportMachineToXLSX, exportMachineToPDF } from './machine-ui.js';
 import { listenForSpareParts } from './spare-parts-store.js';
-import { initializeSparePartsUI, updateSparePartsUI, handleSparePartDelete, getAllSpareParts, redrawSparePartsDashboard } from './spare-parts-ui.js';
+import { initializeSparePartsUI, updateSparePartsUI, handleSparePartDelete, redrawSparePartsDashboard, exportSparePartsToXLSX, exportSparePartsToPDF } from './spare-parts-ui.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleDashboardIcon = document.getElementById('toggle-dashboard-icon');
     const alertConfirmBtn = document.getElementById('alert-confirm');
     
-    // --- NEW SIDEBAR ELEMENTS ---
+    // --- SIDEBAR ELEMENTS ---
     const sidebar = document.getElementById('sidebar');
     const mainContent = document.getElementById('main-content');
     const sidebarToggleBtn = document.getElementById('sidebar-toggle');
@@ -20,10 +20,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabContents = document.querySelectorAll('.tab-content');
     const headerTitle = document.getElementById('header-title');
 
+    // --- EXPORT MODAL ELEMENTS ---
+    const reportModal = document.getElementById('report-modal');
+    const reportModalTitle = document.getElementById('report-modal-title');
+    const machineExportBtn = document.getElementById('machine-export-btn');
+    const sparePartExportBtn = document.getElementById('spare-part-export-btn');
+    const closeReportModalBtn = document.getElementById('close-report-modal');
+    const companyNameInput = document.getElementById('company-name');
+    const companyLogoInput = document.getElementById('company-logo');
+    const logoPreview = document.getElementById('logo-preview');
+    const exportPdfBtn = document.getElementById('export-pdf');
+    const exportXlsxBtn = document.getElementById('export-xlsx');
 
-    // --- UNSUBSCRIBE FUNCTIONS ---
+    // --- STATE ---
     let unsubscribeMachines = null;
     let unsubscribeSpareParts = null;
+    let activeExportType = null; // 'machine' or 'spare-part'
 
     // --- THEME & UI TOGGLES ---
     const syncIconWithTheme = () => {
@@ -32,9 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('theme-toggle-dark-icon').classList.toggle('hidden', isDark);
     };
 
-    /**
-     * Checks local storage to see if the dashboard for the currently active tab should be hidden.
-     */
     const checkDashboardVisibility = () => {
         const activeLink = document.querySelector('.nav-link.active-nav');
         if (!activeLink) return;
@@ -85,7 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('color-theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
         syncIconWithTheme();
         
-        // Redraw both dashboards to update chart colors
         redrawMachineDashboard();
         redrawSparePartsDashboard();
     });
@@ -107,11 +115,13 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebar.classList.toggle('collapsed');
         mainContent.classList.toggle('collapsed');
         localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        // Trigger a resize event to make charts redraw correctly after animation
         window.dispatchEvent(new Event('resize'));
     });
 
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
+            // Do nothing if it's the logout button
             if (link.id === 'logout-btn') return;
 
             navLinks.forEach(l => l.classList.remove('active-nav'));
@@ -123,10 +133,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 targetContent.classList.remove('hidden');
             }
             
+            // Update header title based on the clicked link
             const title = link.querySelector('.sidebar-text').textContent;
             headerTitle.textContent = title;
-
-            // Check visibility state for the newly activated dashboard
+            
+            // Check visibility state for the newly active dashboard
             checkDashboardVisibility();
         });
     });
@@ -143,6 +154,61 @@ document.addEventListener('DOMContentLoaded', () => {
             handleSparePartDelete();
         }
     });
+
+    // --- EXPORT LOGIC ---
+    machineExportBtn.addEventListener('click', () => {
+        activeExportType = 'machine';
+        reportModalTitle.textContent = 'Machine Purchase Report';
+        reportModal.classList.remove('hidden');
+    });
+
+    sparePartExportBtn.addEventListener('click', () => {
+        activeExportType = 'spare-part';
+        reportModalTitle.textContent = 'Spare Parts Report';
+        reportModal.classList.remove('hidden');
+    });
+
+    closeReportModalBtn.addEventListener('click', () => {
+        reportModal.classList.add('hidden');
+        activeExportType = null;
+    });
+
+    exportPdfBtn.addEventListener('click', () => {
+        if (activeExportType === 'machine') {
+            exportMachineToPDF();
+        } else if (activeExportType === 'spare-part') {
+            exportSparePartsToPDF();
+        }
+    });
+
+    exportXlsxBtn.addEventListener('click', () => {
+        if (activeExportType === 'machine') {
+            exportMachineToXLSX();
+        } else if (activeExportType === 'spare-part') {
+            exportSparePartsToXLSX();
+        }
+    });
+
+    companyNameInput.addEventListener('input', (e) => localStorage.setItem('companyName', e.target.value));
+    companyLogoInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            localStorage.setItem('companyLogo', event.target.result);
+            logoPreview.src = event.target.result;
+            logoPreview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // Load saved report info from local storage
+    companyNameInput.value = localStorage.getItem('companyName') || '';
+    const savedLogo = localStorage.getItem('companyLogo');
+    if (savedLogo) {
+        logoPreview.src = savedLogo;
+        logoPreview.classList.remove('hidden');
+    }
 
     // --- INITIAL PAGE LOAD CHECKS ---
     checkDashboardVisibility();

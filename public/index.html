@@ -170,6 +170,10 @@
                                 <div class="flex items-center space-x-4 w-full sm:w-auto">
                                     <select id="machine-project-filter" class="themed-input w-full sm:w-auto"><option value="all">All Projects</option></select>
                                     <input type="text" id="machine-search-input" placeholder="Search records..." class="themed-input w-full sm:w-64">
+                                    <button id="machine-import-btn" class="form-btn-secondary admin-only-inline-flex whitespace-nowrap">
+                                        <i data-lucide="upload" class="w-4 h-4"></i>
+                                        Import
+                                    </button>
                                     <button id="machine-export-btn" class="form-btn-primary admin-only-inline-flex whitespace-nowrap">
                                        <i data-lucide="download" class="w-4 h-4"></i>
                                         Export
@@ -253,6 +257,10 @@
                                  <div class="flex flex-wrap items-center gap-4 w-full sm:w-auto">
                                     <input type="text" id="spare-part-search-input" placeholder="Search records..." class="themed-input w-full sm:w-auto flex-grow">
                                     <select id="spare-part-filter-category" class="themed-input w-full sm:w-auto"><option value="all">All Categories</option><option>Mechanical</option><option>Electrical</option><option>Tools</option></select>
+                                     <button id="spare-part-import-btn" class="form-btn-secondary admin-only-inline-flex whitespace-nowrap">
+                                        <i data-lucide="upload" class="w-4 h-4"></i>
+                                        Import
+                                    </button>
                                     <button id="spare-part-export-btn" class="form-btn-primary admin-only-inline-flex whitespace-nowrap">
                                         <i data-lucide="download" class="w-4 h-4"></i>
                                         Export
@@ -320,6 +328,36 @@
             <div class="flex justify-end gap-4 px-4 py-3 mt-6 border-t themed-border -mx-5 -mb-5">
                 <button id="export-pdf" class="form-btn-secondary">Export as PDF</button>
                 <button id="export-xlsx" class="form-btn-primary">Export as Excel</button>
+            </div>
+        </div>
+    </div>
+     <!-- NEW Import Modal -->
+    <div id="import-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-10 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-xl themed-card modal">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="import-modal-title" class="text-xl font-semibold themed-text-primary">Import Data</h3>
+                <button id="close-import-modal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label for="import-file-input" class="block text-sm font-medium themed-text-secondary">Select Excel File (.xlsx, .xls, .csv)</label>
+                    <input type="file" id="import-file-input" accept=".xlsx, .xls, .csv" class="themed-file-button mt-1 block w-full text-sm themed-text-secondary cursor-pointer">
+                </div>
+                <div id="import-preview-container" class="hidden">
+                    <p class="text-sm themed-text-secondary">Please review the data below. If it looks correct, click "Confirm Import" to save it to the database.</p>
+                    <div id="import-preview-table" class="mt-2 table-container rounded-lg border themed-border max-h-64">
+                        <!-- Preview table will be generated here -->
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-4 mt-6 pt-4 border-t themed-border">
+                <button id="cancel-import-btn" class="form-btn-secondary">Cancel</button>
+                <button id="confirm-import-btn" class="form-btn-primary hidden">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i>
+                    Confirm Import
+                </button>
             </div>
         </div>
     </div>

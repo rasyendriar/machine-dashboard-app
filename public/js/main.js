@@ -1,26 +1,15 @@
 import { initializeAuth } from './auth.js';
 import { listenForMachinePurchases, initializeGoogleDriveApi } from './machine-store.js';
-import { initializeMachineUI, updateMachineUI, handleMachineDelete, getAllPurchases } from './machine-ui.js';
+import { initializeMachineUI, updateMachineUI, handleMachineDelete, getAllPurchases, redrawMachineDashboard } from './machine-ui.js';
 import { listenForSpareParts } from './spare-parts-store.js';
-import { initializeSparePartsUI, updateSparePartsUI, handleSparePartDelete } from './spare-parts-ui.js';
+import { initializeSparePartsUI, updateSparePartsUI, handleSparePartDelete, getAllSpareParts, redrawSparePartsDashboard } from './spare-parts-ui.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- GLOBAL UI ELEMENTS ---
     const themeToggleBtn = document.getElementById('theme-toggle');
-    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
-    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
     const toggleDashboardBtn = document.getElementById('toggle-dashboard-btn');
     const toggleDashboardIcon = document.getElementById('toggle-dashboard-icon');
-    const dashboardPanel = document.getElementById('dashboard-panel');
-    const reportModal = document.getElementById('report-modal');
-    const exportReportBtn = document.getElementById('export-report-btn');
-    const closeReportModalBtn = document.getElementById('close-report-modal');
-    const companyNameInput = document.getElementById('company-name');
-    const companyLogoInput = document.getElementById('company-logo');
-    const logoPreview = document.getElementById('logo-preview');
-    const exportPdfBtn = document.getElementById('export-pdf');
-    const exportXlsxBtn = document.getElementById('export-xlsx');
     const alertConfirmBtn = document.getElementById('alert-confirm');
     
     // --- NEW SIDEBAR ELEMENTS ---
@@ -39,14 +28,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- THEME & UI TOGGLES ---
     const syncIconWithTheme = () => {
         const isDark = document.documentElement.classList.contains('dark');
-        themeToggleLightIcon.classList.toggle('hidden', !isDark);
-        themeToggleDarkIcon.classList.toggle('hidden', isDark);
+        document.getElementById('theme-toggle-light-icon').classList.toggle('hidden', !isDark);
+        document.getElementById('theme-toggle-dark-icon').classList.toggle('hidden', isDark);
     };
 
+    /**
+     * Checks local storage to see if the dashboard for the currently active tab should be hidden.
+     */
     const checkDashboardVisibility = () => {
-        const dashboardIsHidden = localStorage.getItem('dashboardHidden') === 'true';
-        dashboardPanel.classList.toggle('hidden', dashboardIsHidden);
-        toggleDashboardIcon.classList.toggle('rotate-180', dashboardIsHidden);
+        const activeLink = document.querySelector('.nav-link.active-nav');
+        if (!activeLink) return;
+
+        const activeTabId = activeLink.dataset.tab;
+        const dashboardPanel = document.querySelector(`#${activeTabId} .dashboard-panel-container`);
+        if (!dashboardPanel) return;
+
+        const isHidden = localStorage.getItem(`${activeTabId}-dashboardHidden`) === 'true';
+        dashboardPanel.classList.toggle('hidden', isHidden);
+        toggleDashboardIcon.classList.toggle('rotate-180', isHidden);
     };
     
     const checkSidebarState = () => {
@@ -58,26 +57,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- INITIALIZATION ---
 
-    // Initialize listeners for both UI modules
     initializeMachineUI();
     initializeSparePartsUI();
 
-    // The main entry point after user logs in or out
     initializeAuth((role) => {
-        // This is the ON LOGIN callback
         if (unsubscribeMachines) unsubscribeMachines();
         if (unsubscribeSpareParts) unsubscribeSpareParts();
         
         if (role === 'admin') {
-            initializeGoogleDriveApi(); // Initialize Google Drive API for admin users
+            initializeGoogleDriveApi();
         }
         
-        // User is logged in, set up real-time data listeners
         unsubscribeMachines = listenForMachinePurchases(updateMachineUI);
         unsubscribeSpareParts = listenForSpareParts(updateSparePartsUI);
 
     }, () => {
-        // This is the ON LOGOUT callback
         if (unsubscribeMachines) unsubscribeMachines();
         if (unsubscribeSpareParts) unsubscribeSpareParts();
         updateMachineUI([]);
@@ -86,30 +80,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- EVENT LISTENERS ---
     
-    // Theme toggling
     themeToggleBtn.addEventListener('click', () => {
         document.documentElement.classList.toggle('dark');
         localStorage.setItem('color-theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
         syncIconWithTheme();
-        // Force chart redraw by re-running the update function with the current data.
-        if (typeof getAllPurchases === 'function') {
-           updateMachineUI(getAllPurchases()); 
-        }
+        
+        // Redraw both dashboards to update chart colors
+        redrawMachineDashboard();
+        redrawSparePartsDashboard();
     });
     
-    // Dashboard panel visibility
     toggleDashboardBtn.addEventListener('click', () => {
+        const activeLink = document.querySelector('.nav-link.active-nav');
+        if (!activeLink) return;
+
+        const activeTabId = activeLink.dataset.tab;
+        const dashboardPanel = document.querySelector(`#${activeTabId} .dashboard-panel-container`);
+        if (!dashboardPanel) return;
+
         const isHidden = dashboardPanel.classList.toggle('hidden');
-        localStorage.setItem('dashboardHidden', isHidden);
+        localStorage.setItem(`${activeTabId}-dashboardHidden`, isHidden);
         toggleDashboardIcon.classList.toggle('rotate-180', isHidden);
     });
 
-    // --- NEW SIDEBAR LOGIC ---
     sidebarToggleBtn.addEventListener('click', () => {
         sidebar.classList.toggle('collapsed');
         mainContent.classList.toggle('collapsed');
         localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-        // Dispatch a resize event to make charts readjust
         window.dispatchEvent(new Event('resize'));
     });
 
@@ -122,19 +119,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             link.classList.add('active-nav');
             const targetContent = document.getElementById(link.dataset.tab);
-            if(targetContent) {
+            if (targetContent) {
                 targetContent.classList.remove('hidden');
             }
             
-            // Update header title
             const title = link.querySelector('.sidebar-text').textContent;
             headerTitle.textContent = title;
+
+            // Check visibility state for the newly activated dashboard
+            checkDashboardVisibility();
         });
     });
-    // --- END NEW SIDEBAR LOGIC ---
 
-
-    // Centralized Delete Confirmation Handler
     alertConfirmBtn.addEventListener('click', () => {
         const activeLink = document.querySelector('.nav-link.active-nav');
         if (!activeLink) return;
@@ -148,32 +144,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Report modal functionality
-    exportReportBtn.addEventListener('click', () => reportModal.classList.remove('hidden'));
-    closeReportModalBtn.addEventListener('click', () => reportModal.classList.add('hidden'));
-    companyNameInput.addEventListener('input', (e) => localStorage.setItem('companyName', e.target.value));
-    companyLogoInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            localStorage.setItem('companyLogo', event.target.result);
-            logoPreview.src = event.target.result;
-            logoPreview.classList.remove('hidden');
-        };
-        reader.readAsDataURL(file);
-    });
-
-    // Load saved report info from local storage
-    companyNameInput.value = localStorage.getItem('companyName') || '';
-    const savedLogo = localStorage.getItem('companyLogo');
-    if (savedLogo) {
-        logoPreview.src = savedLogo;
-        logoPreview.classList.remove('hidden');
-    }
-
     // --- INITIAL PAGE LOAD CHECKS ---
     checkDashboardVisibility();
     syncIconWithTheme();
     checkSidebarState();
 });
+

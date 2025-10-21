@@ -37,10 +37,6 @@ let itemToDeleteId = null;
 
 // --- PRIVATE FUNCTIONS ---
 
-/**
- * Creates a new row for a single spare part item in the form.
- * @param {object} [item={}] - Optional data to pre-fill the row.
- */
 const createPartItemRow = (item = {}) => {
     const div = document.createElement('div');
     div.className = 'grid grid-cols-1 md:grid-cols-4 gap-4 border-t themed-border pt-4 mt-4 part-item-row';
@@ -84,10 +80,6 @@ const createPartItemRow = (item = {}) => {
     partItemsContainer.appendChild(div);
 };
 
-/**
- * Calculates the total price for a single part item row.
- * @param {HTMLElement} row - The part item row element.
- */
 const calculatePartTotal = (row) => {
     const quantity = parseFloat(row.querySelector('.part-quantity').value) || 0;
     const price = parseFloat(row.querySelector('.part-price').value) || 0;
@@ -96,9 +88,6 @@ const calculatePartTotal = (row) => {
 };
 
 
-/**
- * Resets the spare parts form to its default state.
- */
 const resetForm = () => {
     form.reset();
     editIdInput.value = '';
@@ -106,13 +95,10 @@ const resetForm = () => {
     submitBtnText.textContent = 'Add Purchase';
     cancelEditBtn.classList.add('hidden');
     partItemsContainer.innerHTML = '';
-    createPartItemRow(); // Add one initial blank row
+    createPartItemRow();
 };
 
 
-/**
- * Renders the spare parts table based on current filters.
- */
 const renderTable = () => {
     const searchPp = searchPpInput.value.toLowerCase();
     const searchProject = searchProjectInput.value.toLowerCase();
@@ -179,7 +165,6 @@ const renderTable = () => {
     });
 };
 
-// NEW DASHBOARD FUNCTION
 const updateDashboard = () => {
     if (!keyMetricsContainer || !pieChartCanvas || !barChartCanvas) return;
 
@@ -211,7 +196,7 @@ const updateDashboard = () => {
 
     keyMetricsContainer.innerHTML = `
         <div class="themed-card p-6 rounded-2xl shadow-lg border flex items-center gap-4">
-            <div class="bg-teal-100 dark:bg-teal-900/50 p-3 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-teal-600 dark:text-teal-300"><path d="M6 9l6 6 6-6"/></svg></div>
+            <div class="bg-teal-100 dark:bg-teal-900/50 p-3 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-teal-600 dark:text-teal-300"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
             <div><p class="text-sm themed-text-secondary">Total Projects</p><p class="text-2xl font-bold themed-text-primary">${stats.totalProjects}</p></div>
         </div>
         <div class="themed-card p-6 rounded-2xl shadow-lg border flex items-center gap-4">
@@ -267,6 +252,102 @@ const updateDashboard = () => {
         }
     });
 };
+
+// --- NEW EXPORT FUNCTIONS ---
+
+/**
+ * Exports the current spare parts data to an XLSX file.
+ */
+export const exportSparePartsToXLSX = () => {
+    const dataToExport = [];
+    allParts.forEach(p => {
+        p.items.forEach(item => {
+            dataToExport.push({
+                "PP Number": p.ppNumber || "",
+                "PP Date": p.ppDate || "",
+                "Project Name": p.projectName || "",
+                "Machine Name": p.machineName || "",
+                "Status": p.status || "",
+                "PO Number": p.poNumber || "",
+                "PO Date": p.poDate || "",
+                "AO Name": p.aoName || "",
+                "LPB Number": p.lpbNumber || "",
+                "LPB Date": p.lpbDate || "",
+                "Product Name": item.productName || "",
+                "Model": item.model || "",
+                "Maker": item.maker || "",
+                "Category": item.category || "",
+                "Quantity": item.quantity || 0,
+                "Price": item.price || 0,
+                "Total Price": (item.price || 0) * (item.quantity || 0)
+            });
+        });
+    });
+
+    if (dataToExport.length === 0) {
+        showToast("No data available to export.", "error");
+        return;
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Spare Parts");
+    XLSX.writeFile(workbook, "Spare_Parts_Report.xlsx");
+};
+
+/**
+ * Exports the current spare parts data to a PDF file.
+ */
+export const exportSparePartsToPDF = () => {
+    const { jsPDF } = window.jspdf;
+    if (!jsPDF) {
+        showToast("PDF library not loaded.", "error");
+        return;
+    }
+    const doc = new jsPDF();
+    const companyName = document.getElementById('company-name').value || 'Spare Parts Report';
+    const logo = localStorage.getItem('companyLogo');
+
+    const tableColumn = ["PP Number", "Project", "Product Name", "Category", "Qty", "Status", "Total Price"];
+    const tableRows = [];
+
+    allParts.forEach(p => {
+        p.items.forEach(item => {
+            const itemData = [
+                p.ppNumber || "-",
+                p.projectName || "-",
+                item.productName,
+                item.category,
+                item.quantity,
+                p.status,
+                formatCurrency((item.price || 0) * (item.quantity || 0))
+            ];
+            tableRows.push(itemData);
+        });
+    });
+    
+    if (tableRows.length === 0) {
+        showToast("No data available to export.", "error");
+        return;
+    }
+
+    doc.autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        didDrawPage: function (data) {
+            if (logo) {
+                doc.addImage(logo, 'PNG', data.settings.margin.left, 15, 40, 15);
+            }
+            doc.setFontSize(20);
+            doc.setTextColor(40);
+            doc.text(companyName, data.settings.margin.left + (logo ? 50 : 0), 22);
+        },
+        startY: 40,
+    });
+
+    doc.save("Spare_Parts_Report.pdf");
+};
+
 
 // --- EVENT HANDLERS ---
 
@@ -364,10 +445,6 @@ const handleTableClick = (e) => {
     }
 };
 
-/**
- * Handles the confirmation of a delete action.
- * This is exported so main.js can call it.
- */
 export const handleSparePartDelete = async () => {
     if (itemToDeleteId) {
         try {
@@ -386,9 +463,6 @@ export const handleSparePartDelete = async () => {
 
 // --- PUBLIC API ---
 
-/**
- * Initializes all event listeners for the spare parts UI.
- */
 export const initializeSparePartsUI = () => {
     form.addEventListener('submit', handleFormSubmit);
     tableBody.addEventListener('click', handleTableClick);
@@ -418,28 +492,16 @@ export const initializeSparePartsUI = () => {
     resetForm();
 };
 
-/**
- * Updates the UI with new data from Firestore.
- * @param {Array<object>} parts - The array of spare part documents.
- */
 export const updateSparePartsUI = (parts) => {
     allParts = parts;
     renderTable();
     updateDashboard();
 };
 
-/**
- * Returns the current state of the spare parts.
- * @returns {Array<object>}
- */
 export const getAllSpareParts = () => {
     return allParts;
 };
 
-/**
- * Redraws the dashboard with the current data.
- * Useful for theme changes.
- */
 export const redrawSparePartsDashboard = () => {
     updateDashboard();
 };

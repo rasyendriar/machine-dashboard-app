@@ -204,6 +204,10 @@ tr:nth-child(even) .sticky-col-right {
 html.dark tr:nth-child(even) .sticky-col-right {
     background-color: var(--zebra-dark);
 }
+/* ADDED THIS NEW RULE FOR THE TOP-RIGHT CORNER */
+.sticky-header th.sticky-col-right {
+    z-index: 11; /* Higher z-index to stay on top of other sticky elements */
+}
 
 
 /* Animations */
@@ -275,10 +279,10 @@ html.dark .form-btn-secondary:hover {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-secondary-light);
-    background-color: var(--header-light); /* ADDED THIS LINE */
+    background-color: var(--header-light); 
 }
 html.dark .table-header {
     color: var(--text-secondary-dark);
-    background-color: var(--header-dark); /* ADDED THIS LINE */
+    background-color: var(--header-dark); 
 }
 

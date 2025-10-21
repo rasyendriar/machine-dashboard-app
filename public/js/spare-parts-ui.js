@@ -49,6 +49,10 @@ const createPartItemRow = (item = {}) => {
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
+                <label class="block text-sm font-medium themed-text-secondary">Part Code Number</label>
+                <input type="text" name="partCode" class="themed-input mt-1 block w-full" value="${item.partCode || ''}">
+            </div>
+            <div>
                 <label class="block text-sm font-medium themed-text-secondary required-label">Product Name</label>
                 <input type="text" name="productName" class="themed-input mt-1 block w-full" value="${item.productName || ''}" required>
             </div>
@@ -59,14 +63,6 @@ const createPartItemRow = (item = {}) => {
             <div>
                 <label class="block text-sm font-medium themed-text-secondary">Maker</label>
                 <input type="text" name="maker" class="themed-input mt-1 block w-full" value="${item.maker || ''}">
-            </div>
-            <div>
-                <label class="block text-sm font-medium themed-text-secondary required-label">Category</label>
-                <select name="category" class="themed-input mt-1 block w-full" required>
-                    <option ${!item.category || item.category === 'Mechanical' ? 'selected' : ''}>Mechanical</option>
-                    <option ${item.category === 'Electrical' ? 'selected' : ''}>Electrical</option>
-                    <option ${item.category === 'Tools' ? 'selected' : ''}>Tools</option>
-                </select>
             </div>
             <div>
                 <label class="block text-sm font-medium themed-text-secondary required-label">Quantity</label>
@@ -153,7 +149,8 @@ const renderTable = () => {
             (item.projectName && item.projectName.toLowerCase().includes(searchTerm)) ||
             (item.machineName && item.machineName.toLowerCase().includes(searchTerm)) ||
             (item.productName && item.productName.toLowerCase().includes(searchTerm)) ||
-            (item.model && item.model.toLowerCase().includes(searchTerm))
+            (item.model && item.model.toLowerCase().includes(searchTerm)) ||
+            (item.partCode && item.partCode.toLowerCase().includes(searchTerm))
         );
 
         return categoryMatch && searchMatch;
@@ -162,12 +159,28 @@ const renderTable = () => {
     tableBody.innerHTML = '';
     noDataMessage.classList.toggle('hidden', filteredData.length > 0);
 
+    // Update table headers to include Part Code
+    const thead = tableBody.parentElement.querySelector('thead tr');
+    thead.innerHTML = `
+        <th class="table-header">PP Number</th>
+        <th class="table-header">Project Name</th>
+        <th class="table-header">Part Code</th>
+        <th class="table-header">Product Name</th>
+        <th class="table-header">Category</th>
+        <th class="table-header text-center">Qty</th>
+        <th class="table-header">Status</th>
+        <th class="table-header">PO Date</th>
+        <th class="table-header">Total Price</th>
+        <th class="table-header text-center sticky-col-right">Actions</th>
+    `;
+
     filteredData.forEach(item => {
         const row = document.createElement('tr');
         row.className = 'fade-in-row';
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.ppNumber || '-'}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.projectName || '-'}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.partCode || '-'}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.productName}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.category}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary text-center">${item.quantity}</td>
@@ -191,7 +204,6 @@ const renderTable = () => {
     });
 };
 
-// ... (updateDashboard and export functions remain the same) ...
 const updateDashboard = () => {
     if (!keyMetricsContainer || !pieChartCanvas || !barChartCanvas) return;
 
@@ -212,10 +224,10 @@ const updateDashboard = () => {
                 if (!stats.projectValues[p.projectName]) stats.projectValues[p.projectName] = 0;
                 stats.projectValues[p.projectName] += value;
             }
-            if (item.category in stats.categoryCounts) {
-                stats.categoryCounts[item.category]++;
-            }
         });
+        if (p.category in stats.categoryCounts) {
+            stats.categoryCounts[p.category]++;
+        }
         if (p.status in stats.statusCounts) {
             stats.statusCounts[p.status]++;
         }
@@ -235,7 +247,7 @@ const updateDashboard = () => {
             <div><p class="text-sm themed-text-secondary">Total Value</p><p class="text-2xl font-bold themed-text-primary">${formatCurrency(stats.totalValue)}</p></div>
         </div>
         <div class="themed-card p-6 rounded-2xl shadow-lg border">
-            <p class="text-sm themed-text-secondary mb-2">Items by Category</p>
+            <p class="text-sm themed-text-secondary mb-2">PPs by Category</p>
             <div class="flex flex-col gap-2">
                <div><span class="text-xs">Mechanical:</span> <span class="font-semibold">${stats.categoryCounts.Mechanical}</span></div>
                <div><span class="text-xs">Electrical:</span> <span class="font-semibold">${stats.categoryCounts.Electrical}</span></div>
@@ -289,19 +301,20 @@ export const exportSparePartsToXLSX = () => {
                 "PP Date": p.ppDate || "",
                 "Project Name": p.projectName || "",
                 "Machine Name": p.machineName || "",
+                "Category": p.category || "",
                 "Status": p.status || "",
+                "Part Code": item.partCode || "",
+                "Product Name": item.productName || "",
+                "Model": item.model || "",
+                "Maker": item.maker || "",
+                "Quantity": item.quantity || 0,
+                "Price": item.price || 0,
+                "Total Price": (item.price || 0) * (item.quantity || 0),
                 "PO Number": item.poNumber || "",
                 "PO Date": item.poDate || "",
                 "AO Name": item.aoName || "",
                 "LPB Number": item.lpbNumber || "",
                 "LPB Date": item.lpbDate || "",
-                "Product Name": item.productName || "",
-                "Model": item.model || "",
-                "Maker": item.maker || "",
-                "Category": item.category || "",
-                "Quantity": item.quantity || 0,
-                "Price": item.price || 0,
-                "Total Price": (item.price || 0) * (item.quantity || 0)
             });
         });
     });
@@ -327,16 +340,16 @@ export const exportSparePartsToPDF = () => {
     const companyName = document.getElementById('company-name').value || 'Spare Parts Report';
     const logo = localStorage.getItem('companyLogo');
 
-    const tableColumn = ["PP Number", "Project", "Product Name", "PO Number", "Qty", "Status", "Total Price"];
+    const tableColumn = ["PP Number", "Part Code", "Product Name", "Category", "Qty", "Status", "Total Price"];
     const tableRows = [];
 
     allParts.forEach(p => {
         p.items.forEach(item => {
             const itemData = [
                 p.ppNumber || "-",
-                p.projectName || "-",
+                item.partCode || "-",
                 item.productName,
-                item.poNumber || "-",
+                p.category,
                 item.quantity,
                 p.status,
                 formatCurrency((item.price || 0) * (item.quantity || 0))
@@ -383,10 +396,10 @@ const handleFormSubmit = async (e) => {
         const productName = row.querySelector('[name="productName"]').value;
         if (!productName) isFormValid = false;
         items.push({
+            partCode: row.querySelector('[name="partCode"]').value,
             productName,
             model: row.querySelector('[name="model"]').value,
             maker: row.querySelector('[name="maker"]').value,
-            category: row.querySelector('[name="category"]').value,
             quantity: parseInt(row.querySelector('[name="quantity"]').value, 10) || 0,
             price: parseFloat(row.querySelector('[name="price"]').value) || 0,
             poNumber: row.querySelector('[name="poNumber"]').value,
@@ -407,6 +420,7 @@ const handleFormSubmit = async (e) => {
     const partData = {
         projectName: form['spare-part-project-name'].value,
         machineName: form['spare-part-machine-name'].value,
+        category: form['spare-part-category'].value,
         status: form['spare-part-status'].value,
         ppNumber: form['spare-part-pp-number'].value,
         ppDate: form['spare-part-pp-date'].value,
@@ -441,6 +455,7 @@ const handleTableClick = (e) => {
         editIdInput.value = id;
         form['spare-part-project-name'].value = part.projectName || '';
         form['spare-part-machine-name'].value = part.machineName || '';
+        form['spare-part-category'].value = part.category || 'Mechanical';
         form['spare-part-status'].value = part.status || 'Approval';
         form['spare-part-pp-number'].value = part.ppNumber || '';
         form['spare-part-pp-date'].value = part.ppDate || '';

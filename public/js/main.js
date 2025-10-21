@@ -164,9 +164,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     alertConfirmBtn.addEventListener('click', () => {
-        if (activeDataType === 'machine') {
+        // Determine active tab to call correct delete handler
+        const activeLink = document.querySelector('.nav-link.active-nav');
+        if (!activeLink) return;
+        const activeTabId = activeLink.dataset.tab;
+
+        if (activeTabId === 'machine-purchase-section') {
             handleMachineDelete();
-        } else if (activeDataType === 'spare-part') {
+        } else if (activeTabId === 'spare-parts-section') {
             handleSparePartDelete();
         }
     });

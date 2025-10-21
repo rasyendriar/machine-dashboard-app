@@ -30,6 +30,8 @@ const cancelEditBtn = document.getElementById('machine-cancel-edit-btn');
 // Modals
 const customAlert = document.getElementById('custom-alert');
 const alertCancelBtn = document.getElementById('alert-cancel');
+const alertMessage = document.getElementById('alert-message');
+const alertTitle = document.getElementById('alert-title');
 const detailsModal = document.getElementById('details-modal');
 const closeDetailsModalBtn = document.getElementById('close-details-modal');
 
@@ -365,7 +367,11 @@ const handleTableClick = (e) => {
         form.scrollIntoView({ behavior: 'smooth' });
 
     } else if (action === 'delete') {
+        const item = allPurchases.find(p => p.id === id);
+        if (!item) return;
         itemToDeleteId = id;
+        alertTitle.textContent = `Delete '${item.itemName}'?`;
+        alertMessage.textContent = `Are you sure you want to delete the record for ${item.noDrawing}? This action cannot be undone.`;
         customAlert.classList.remove('hidden');
     }
 };
@@ -516,4 +522,3 @@ export const getAllPurchases = () => {
 export const redrawMachineDashboard = () => {
     updateDashboard();
 };
-

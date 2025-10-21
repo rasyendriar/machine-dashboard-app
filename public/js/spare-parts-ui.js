@@ -69,8 +69,8 @@ const createPartItemRow = (item = {}) => {
                 <input type="number" name="quantity" min="1" class="themed-input mt-1 block w-full part-quantity" value="${item.quantity || 1}" required>
             </div>
             <div>
-                <label class="block text-sm font-medium themed-text-secondary required-label">Price</label>
-                <input type="number" name="price" min="0" class="themed-input mt-1 block w-full part-price" value="${item.price || 0}" required>
+                <label class="block text-sm font-medium themed-text-secondary">Price</label>
+                <input type="number" name="price" min="0" class="themed-input mt-1 block w-full part-price" value="${item.price || 0}">
             </div>
             <div class="lg:col-span-2 themed-inset-panel p-3 rounded-lg">
                  <label class="block text-sm font-medium themed-text-secondary">Total Price</label>

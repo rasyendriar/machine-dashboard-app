@@ -32,9 +32,6 @@ const customAlert = document.getElementById('custom-alert');
 const alertCancelBtn = document.getElementById('alert-cancel');
 const detailsModal = document.getElementById('details-modal');
 const closeDetailsModalBtn = document.getElementById('close-details-modal');
-const exportPdfBtn = document.getElementById('export-pdf');
-const exportXlsxBtn = document.getElementById('export-xlsx');
-
 
 // --- STATE ---
 let allPurchases = [];
@@ -43,18 +40,12 @@ let itemToDeleteId = null;
 
 // --- PRIVATE FUNCTIONS ---
 
-/**
- * Calculates the total price based on quantity and negotiated quotation.
- */
 const calculateTotal = () => {
     const quantity = parseFloat(quantityInput.value) || 0;
     const price = parseFloat(negotiatedQuotationInput.value) || 0;
     totalPriceDisplay.textContent = formatCurrency(quantity * price);
 };
 
-/**
- * Resets the machine purchase form to its default state.
- */
 const resetForm = () => {
     form.reset();
     editIdInput.value = '';
@@ -69,11 +60,6 @@ const resetForm = () => {
     searchInput.value = '';
 };
 
-/**
- * Determines the raw progress status of a purchase item.
- * @param {object} item - The purchase item.
- * @returns {string} 'Complete', 'Late', or 'In Progress'.
- */
 const getRawProgressStatus = (item) => {
     if (!item) return 'Error';
     if (item.status === 'Incoming') return 'Complete';
@@ -87,11 +73,6 @@ const getRawProgressStatus = (item) => {
     return 'In Progress';
 };
 
-/**
- * Generates the HTML display for a progress status.
- * @param {object} item - The purchase item.
- * @returns {string} HTML span element for the status.
- */
 const getProgressStatusDisplay = (item) => {
     const status = getRawProgressStatus(item);
     if (status === 'Complete') return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/70 dark:text-green-300">Complete</span>`;
@@ -99,9 +80,6 @@ const getProgressStatusDisplay = (item) => {
     return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/70 dark:text-blue-300">In Progress</span>`;
 };
 
-/**
- * Populates the project filter dropdown with unique project codes.
- */
 const populateProjectFilter = () => {
     const existingValue = projectFilter.value;
     const projects = [...new Set(allPurchases.map(p => p.projectCode).filter(Boolean))];
@@ -115,9 +93,6 @@ const populateProjectFilter = () => {
     projectFilter.value = projects.includes(existingValue) ? existingValue : 'all';
 };
 
-/**
- * Renders the machine purchases table based on current filters.
- */
 const renderTable = () => {
     const searchTerm = searchInput.value.toLowerCase();
     const selectedProject = projectFilter.value;
@@ -139,21 +114,21 @@ const renderTable = () => {
             <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${p.noDrawing}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${p.itemName}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${p.machinePic || '-'}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${p.quantity}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary text-center">${p.quantity}</td>
             <td class="px-6 py-4 whitespace-nowrap">${getProgressStatusDisplay(p)}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium themed-text-primary">${p.status || 'N/A'}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600 dark:text-indigo-400">${formatCurrency(totalNego)}</td>
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium sticky-col-right">
                 <div class="flex justify-center items-center gap-4">
                     <button data-action="view" data-id="${p.id}" class="text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300" title="View Details">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                     </button>
                     <span class="admin-only-inline-flex gap-4">
                         <button data-action="edit" data-id="${p.id}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300" title="Edit">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
                         <button data-action="delete" data-id="${p.id}" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                         </button>
                     </span>
                 </div>
@@ -162,11 +137,7 @@ const renderTable = () => {
     });
 };
 
-/**
- * Updates all dashboard metrics and charts.
- */
 const updateDashboard = () => {
-    // This function will be called whenever data changes
     if (!keyMetricsContainer || !pieChartCanvas || !barChartCanvas) return;
 
     let stats = {
@@ -261,9 +232,6 @@ const updateDashboard = () => {
 
 // --- EVENT HANDLERS ---
 
-/**
- * Handles form submission for adding or editing a machine purchase.
- */
 const handleFormSubmit = async (e) => {
     e.preventDefault();
     submitBtn.disabled = true;
@@ -326,14 +294,10 @@ const handleFormSubmit = async (e) => {
     }
 };
 
-/**
- * Handles clicks on the table body for view, edit, or delete actions.
- */
 const handleTableClick = (e) => {
     const button = e.target.closest('button');
     if (!button) return;
 
-    // Add pointer-events: none to SVGs inside buttons to ensure the button is the click target
     const { action, id } = button.dataset;
     if (!action || !id) return;
 
@@ -406,10 +370,6 @@ const handleTableClick = (e) => {
     }
 };
 
-/**
- * Handles the confirmation of a delete action.
- * This is exported so main.js can call it.
- */
 export const handleMachineDelete = async () => {
     if (itemToDeleteId) {
         try {
@@ -425,8 +385,8 @@ export const handleMachineDelete = async () => {
     }
 };
 
-// --- NEW EXPORT FUNCTIONS ---
-const exportToXLSX = () => {
+// --- EXPORT FUNCTIONS ---
+export const exportMachineToXLSX = () => {
     const dataToExport = allPurchases.map(p => ({
         "Project": p.projectCode || "",
         "No. Drawing": p.noDrawing || "",
@@ -445,14 +405,23 @@ const exportToXLSX = () => {
         "LPB Number": p.lpbNumber || "",
     }));
 
+    if (dataToExport.length === 0) {
+        showToast("No data available to export.", "error");
+        return;
+    }
+
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Machine Purchases");
     XLSX.writeFile(workbook, "Machine_Purchase_Report.xlsx");
 };
 
-const exportToPDF = () => {
+export const exportMachineToPDF = () => {
     const { jsPDF } = window.jspdf;
+    if (!jsPDF) {
+        showToast("PDF library not loaded.", "error");
+        return;
+    }
     const doc = new jsPDF();
     const companyName = document.getElementById('company-name').value || 'Machine Purchase Report';
     const logo = localStorage.getItem('companyLogo');
@@ -472,11 +441,15 @@ const exportToPDF = () => {
         tableRows.push(purchaseData);
     });
 
+    if (tableRows.length === 0) {
+        showToast("No data available to export.", "error");
+        return;
+    }
+
     doc.autoTable({
         head: [tableColumn],
         body: tableRows,
         didDrawPage: function (data) {
-            // Header
             if (logo) {
                 doc.addImage(logo, 'PNG', data.settings.margin.left, 15, 40, 15);
             }
@@ -493,9 +466,6 @@ const exportToPDF = () => {
 
 // --- PUBLIC FUNCTIONS ---
 
-/**
- * Initializes all event listeners for the machine purchase UI.
- */
 export const initializeMachineUI = () => {
     form.addEventListener('submit', handleFormSubmit);
     tableBody.addEventListener('click', handleTableClick);
@@ -530,17 +500,8 @@ export const initializeMachineUI = () => {
         customAlert.classList.add('hidden');
     });
     closeDetailsModalBtn.addEventListener('click', () => detailsModal.classList.add('hidden'));
-
-    // Attach export button listeners
-    exportXlsxBtn.addEventListener('click', exportToXLSX);
-    exportPdfBtn.addEventListener('click', exportToPDF);
 };
 
-/**
- * Updates the UI with new data from Firestore.
- * This is the main entry point for data changes.
- * @param {Array<object>} purchases - The array of purchase documents.
- */
 export const updateMachineUI = (purchases) => {
     allPurchases = purchases;
     populateProjectFilter();
@@ -548,10 +509,11 @@ export const updateMachineUI = (purchases) => {
     updateDashboard();
 };
 
-/**
- * Returns the current state of the purchases.
- * @returns {Array<object>}
- */
 export const getAllPurchases = () => {
     return allPurchases;
 };
+
+export const redrawMachineDashboard = () => {
+    updateDashboard();
+};
+

@@ -37,57 +37,90 @@ let itemToDeleteId = null;
 
 // --- PRIVATE FUNCTIONS ---
 
+/**
+ * Creates a new row for a single spare part item in the form with all individual fields.
+ * @param {object} [item={}] - Optional data to pre-fill the row.
+ */
 const createPartItemRow = (item = {}) => {
     const div = document.createElement('div');
-    div.className = 'grid grid-cols-1 md:grid-cols-4 gap-4 border-t themed-border pt-4 mt-4 part-item-row';
+    div.className = 'part-item-row border-t themed-border pt-4 mt-4 space-y-4';
     div.innerHTML = `
-        <div class="md:col-span-4 flex justify-end">
-            <button type="button" class="text-sm text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-500 remove-part-btn font-semibold">Remove</button>
+        <div class="flex justify-end">
+            <button type="button" class="text-sm text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-500 remove-part-btn font-semibold">Remove Part</button>
         </div>
-        <div>
-            <label class="block text-sm font-medium themed-text-secondary required-label">Product Name</label>
-            <input type="text" name="productName" class="themed-input mt-1 block w-full" value="${item.productName || ''}" required>
-        </div>
-        <div>
-            <label class="block text-sm font-medium themed-text-secondary">Model</label>
-            <input type="text" name="model" class="themed-input mt-1 block w-full" value="${item.model || ''}">
-        </div>
-        <div>
-            <label class="block text-sm font-medium themed-text-secondary">Maker</label>
-            <input type="text" name="maker" class="themed-input mt-1 block w-full" value="${item.maker || ''}">
-        </div>
-        <div>
-            <label class="block text-sm font-medium themed-text-secondary required-label">Category</label>
-            <select name="category" class="themed-input mt-1 block w-full" required>
-                <option ${!item.category || item.category === 'Mechanical' ? 'selected' : ''}>Mechanical</option>
-                <option ${item.category === 'Electrical' ? 'selected' : ''}>Electrical</option>
-                <option ${item.category === 'Tools' ? 'selected' : ''}>Tools</option>
-            </select>
-        </div>
-        <div>
-            <label class="block text-sm font-medium themed-text-secondary required-label">Quantity</label>
-            <input type="number" name="quantity" min="1" class="themed-input mt-1 block w-full part-quantity" value="${item.quantity || 1}" required>
-        </div>
-        <div>
-            <label class="block text-sm font-medium themed-text-secondary required-label">Price</label>
-            <input type="number" name="price" min="0" class="themed-input mt-1 block w-full part-price" value="${item.price || 0}" required>
-        </div>
-        <div class="md:col-span-2 themed-inset-panel p-3 rounded-lg">
-             <label class="block text-sm font-medium themed-text-secondary">Total Price</label>
-             <p class="text-xl font-bold themed-text-primary mt-1 part-total-price">${formatCurrency((item.quantity || 1) * (item.price || 0))}</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium themed-text-secondary required-label">Product Name</label>
+                <input type="text" name="productName" class="themed-input mt-1 block w-full" value="${item.productName || ''}" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium themed-text-secondary">Model</label>
+                <input type="text" name="model" class="themed-input mt-1 block w-full" value="${item.model || ''}">
+            </div>
+            <div>
+                <label class="block text-sm font-medium themed-text-secondary">Maker</label>
+                <input type="text" name="maker" class="themed-input mt-1 block w-full" value="${item.maker || ''}">
+            </div>
+            <div>
+                <label class="block text-sm font-medium themed-text-secondary required-label">Category</label>
+                <select name="category" class="themed-input mt-1 block w-full" required>
+                    <option ${!item.category || item.category === 'Mechanical' ? 'selected' : ''}>Mechanical</option>
+                    <option ${item.category === 'Electrical' ? 'selected' : ''}>Electrical</option>
+                    <option ${item.category === 'Tools' ? 'selected' : ''}>Tools</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium themed-text-secondary required-label">Quantity</label>
+                <input type="number" name="quantity" min="1" class="themed-input mt-1 block w-full part-quantity" value="${item.quantity || 1}" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium themed-text-secondary required-label">Price</label>
+                <input type="number" name="price" min="0" class="themed-input mt-1 block w-full part-price" value="${item.price || 0}" required>
+            </div>
+            <div class="lg:col-span-2 themed-inset-panel p-3 rounded-lg">
+                 <label class="block text-sm font-medium themed-text-secondary">Total Price</label>
+                 <p class="text-xl font-bold themed-text-primary mt-1 part-total-price">${formatCurrency((item.quantity || 1) * (item.price || 0))}</p>
+            </div>
+             <div>
+                <label class="block text-sm font-medium themed-text-secondary">PO Number</label>
+                <input type="text" name="poNumber" class="themed-input mt-1 block w-full" value="${item.poNumber || ''}">
+            </div>
+             <div>
+                <label class="block text-sm font-medium themed-text-secondary">PO Date</label>
+                <input type="date" name="poDate" class="themed-input mt-1 block w-full" value="${item.poDate || ''}">
+            </div>
+            <div>
+                <label class="block text-sm font-medium themed-text-secondary">AO Name</label>
+                <input type="text" name="aoName" class="themed-input mt-1 block w-full" value="${item.aoName || ''}">
+            </div>
+            <div>
+                <label class="block text-sm font-medium themed-text-secondary">LPB Number</label>
+                <input type="text" name="lpbNumber" class="themed-input mt-1 block w-full" value="${item.lpbNumber || ''}">
+            </div>
+            <div>
+                <label class="block text-sm font-medium themed-text-secondary">LPB Date</label>
+                <input type="date" name="lpbDate" class="themed-input mt-1 block w-full" value="${item.lpbDate || ''}">
+            </div>
         </div>
     `;
     partItemsContainer.appendChild(div);
 };
 
+/**
+ * Calculates the total price for a single part item row.
+ * @param {HTMLElement} row - The part item row element.
+ */
 const calculatePartTotal = (row) => {
-    const quantity = parseFloat(row.querySelector('.part-quantity').value) || 0;
-    const price = parseFloat(row.querySelector('.part-price').value) || 0;
+    const quantity = parseFloat(row.querySelector('[name="quantity"]').value) || 0;
+    const price = parseFloat(row.querySelector('[name="price"]').value) || 0;
     const total = quantity * price;
     row.querySelector('.part-total-price').textContent = formatCurrency(total);
 };
 
 
+/**
+ * Resets the spare parts form to its default state.
+ */
 const resetForm = () => {
     form.reset();
     editIdInput.value = '';
@@ -95,54 +128,54 @@ const resetForm = () => {
     submitBtnText.textContent = 'Add Purchase';
     cancelEditBtn.classList.add('hidden');
     partItemsContainer.innerHTML = '';
-    createPartItemRow();
+    createPartItemRow(); // Add one initial blank row
 };
 
 
+/**
+ * Renders the spare parts table with each item on its own row.
+ */
 const renderTable = () => {
     const searchPp = searchPpInput.value.toLowerCase();
     const searchProject = searchProjectInput.value.toLowerCase();
     const filterCategory = filterCategorySelect.value;
 
-    const filteredParts = allParts.filter(part => {
-        const ppMatch = !searchPp || (part.ppNumber && part.ppNumber.toLowerCase().includes(searchPp));
-        const projectMatch = !searchProject || (part.projectName && part.projectName.toLowerCase().includes(searchProject));
-        const categoryMatch = filterCategory === 'all' || part.items.some(item => item.category === filterCategory);
+    let flatData = [];
+    allParts.forEach(part => {
+        part.items.forEach(item => {
+            flatData.push({ ...item, ...part, id: part.id }); // Combine part and item data
+        });
+    });
+
+    const filteredData = flatData.filter(item => {
+        const ppMatch = !searchPp || (item.ppNumber && item.ppNumber.toLowerCase().includes(searchPp));
+        const projectMatch = !searchProject || (item.projectName && item.projectName.toLowerCase().includes(searchProject));
+        const categoryMatch = filterCategory === 'all' || item.category === filterCategory;
         return ppMatch && projectMatch && categoryMatch;
     });
 
     tableBody.innerHTML = '';
-    noDataMessage.classList.toggle('hidden', filteredParts.length > 0);
+    noDataMessage.classList.toggle('hidden', filteredData.length > 0);
 
-    filteredParts.forEach(part => {
-        const itemsToDisplay = filterCategory === 'all' 
-            ? part.items 
-            : part.items.filter(item => item.category === filterCategory);
-        
-        const firstItem = itemsToDisplay[0];
-        if (!firstItem) return;
-
-        const totalItemsInPP = itemsToDisplay.length;
-        const totalGrandPrice = part.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-        
+    filteredData.forEach(item => {
         const row = document.createElement('tr');
         row.className = 'fade-in-row';
         row.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary" rowspan="${totalItemsInPP}">${part.ppNumber || '-'}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary" rowspan="${totalItemsInPP}">${part.projectName || '-'}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${firstItem.productName}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${firstItem.category}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary text-center">${firstItem.quantity}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-primary font-semibold" rowspan="${totalItemsInPP}">${part.status}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary" rowspan="${totalItemsInPP}">${part.poDate || '-'}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600 dark:text-indigo-400" rowspan="${totalItemsInPP}">${formatCurrency(totalGrandPrice)}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium sticky-col-right" rowspan="${totalItemsInPP}">
+            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.ppNumber || '-'}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.projectName || '-'}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.productName}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.category}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary text-center">${item.quantity}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-primary font-semibold">${item.status}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.poDate || '-'}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600 dark:text-indigo-400">${formatCurrency(item.price * item.quantity)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium sticky-col-right">
                 <div class="flex justify-center items-center gap-4">
                      <span class="admin-only-inline-flex gap-4">
-                        <button data-action="edit" data-id="${part.id}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300" title="Edit">
+                        <button data-action="edit" data-id="${item.id}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300" title="Edit">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
-                        <button data-action="delete" data-id="${part.id}" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete">
+                        <button data-action="delete" data-id="${item.id}" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                         </button>
                     </span>
@@ -150,21 +183,10 @@ const renderTable = () => {
             </td>
         `;
         tableBody.appendChild(row);
-        
-        for(let i = 1; i < itemsToDisplay.length; i++) {
-            const item = itemsToDisplay[i];
-            const subRow = document.createElement('tr');
-            subRow.className = 'fade-in-row';
-            subRow.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.productName}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.category}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary text-center">${item.quantity}</td>
-            `;
-            tableBody.appendChild(subRow);
-        }
     });
 };
 
+// ... (updateDashboard function remains the same) ...
 const updateDashboard = () => {
     if (!keyMetricsContainer || !pieChartCanvas || !barChartCanvas) return;
 
@@ -253,11 +275,6 @@ const updateDashboard = () => {
     });
 };
 
-// --- NEW EXPORT FUNCTIONS ---
-
-/**
- * Exports the current spare parts data to an XLSX file.
- */
 export const exportSparePartsToXLSX = () => {
     const dataToExport = [];
     allParts.forEach(p => {
@@ -268,11 +285,11 @@ export const exportSparePartsToXLSX = () => {
                 "Project Name": p.projectName || "",
                 "Machine Name": p.machineName || "",
                 "Status": p.status || "",
-                "PO Number": p.poNumber || "",
-                "PO Date": p.poDate || "",
-                "AO Name": p.aoName || "",
-                "LPB Number": p.lpbNumber || "",
-                "LPB Date": p.lpbDate || "",
+                "PO Number": item.poNumber || "",
+                "PO Date": item.poDate || "",
+                "AO Name": item.aoName || "",
+                "LPB Number": item.lpbNumber || "",
+                "LPB Date": item.lpbDate || "",
                 "Product Name": item.productName || "",
                 "Model": item.model || "",
                 "Maker": item.maker || "",
@@ -295,9 +312,6 @@ export const exportSparePartsToXLSX = () => {
     XLSX.writeFile(workbook, "Spare_Parts_Report.xlsx");
 };
 
-/**
- * Exports the current spare parts data to a PDF file.
- */
 export const exportSparePartsToPDF = () => {
     const { jsPDF } = window.jspdf;
     if (!jsPDF) {
@@ -308,7 +322,7 @@ export const exportSparePartsToPDF = () => {
     const companyName = document.getElementById('company-name').value || 'Spare Parts Report';
     const logo = localStorage.getItem('companyLogo');
 
-    const tableColumn = ["PP Number", "Project", "Product Name", "Category", "Qty", "Status", "Total Price"];
+    const tableColumn = ["PP Number", "Project", "Product Name", "PO Number", "Qty", "Status", "Total Price"];
     const tableRows = [];
 
     allParts.forEach(p => {
@@ -317,7 +331,7 @@ export const exportSparePartsToPDF = () => {
                 p.ppNumber || "-",
                 p.projectName || "-",
                 item.productName,
-                item.category,
+                item.poNumber || "-",
                 item.quantity,
                 p.status,
                 formatCurrency((item.price || 0) * (item.quantity || 0))
@@ -370,6 +384,11 @@ const handleFormSubmit = async (e) => {
             category: row.querySelector('[name="category"]').value,
             quantity: parseInt(row.querySelector('[name="quantity"]').value, 10) || 0,
             price: parseFloat(row.querySelector('[name="price"]').value) || 0,
+            poNumber: row.querySelector('[name="poNumber"]').value,
+            poDate: row.querySelector('[name="poDate"]').value,
+            aoName: row.querySelector('[name="aoName"]').value,
+            lpbNumber: row.querySelector('[name="lpbNumber"]').value,
+            lpbDate: row.querySelector('[name="lpbDate"]').value,
         });
     });
     
@@ -386,11 +405,6 @@ const handleFormSubmit = async (e) => {
         status: form['spare-part-status'].value,
         ppNumber: form['spare-part-pp-number'].value,
         ppDate: form['spare-part-pp-date'].value,
-        poNumber: form['spare-part-po-number'].value,
-        poDate: form['spare-part-po-date'].value,
-        aoName: form['spare-part-ao-name'].value,
-        lpbNumber: form['spare-part-lpb-number'].value,
-        lpbDate: form['spare-part-lpb-date'].value,
         items: items
     };
 
@@ -425,12 +439,7 @@ const handleTableClick = (e) => {
         form['spare-part-status'].value = part.status || 'Approval';
         form['spare-part-pp-number'].value = part.ppNumber || '';
         form['spare-part-pp-date'].value = part.ppDate || '';
-        form['spare-part-po-number'].value = part.poNumber || '';
-        form['spare-part-po-date'].value = part.poDate || '';
-        form['spare-part-ao-name'].value = part.aoName || '';
-        form['spare-part-lpb-number'].value = part.lpbNumber || '';
-        form['spare-part-lpb-date'].value = part.lpbDate || '';
-
+        
         partItemsContainer.innerHTML = '';
         part.items.forEach(item => createPartItemRow(item));
         
@@ -479,8 +488,9 @@ export const initializeSparePartsUI = () => {
         }
     });
      partItemsContainer.addEventListener('input', (e) => {
-        if (e.target.classList.contains('part-quantity') || e.target.classList.contains('part-price')) {
-            calculatePartTotal(e.target.closest('.part-item-row'));
+        const partRow = e.target.closest('.part-item-row');
+        if(partRow && (e.target.classList.contains('part-quantity') || e.target.classList.contains('part-price'))) {
+            calculatePartTotal(partRow);
         }
     });
 

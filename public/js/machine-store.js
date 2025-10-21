@@ -6,7 +6,8 @@ import {
     updateDoc,
     deleteDoc,
     doc,
-    serverTimestamp
+    serverTimestamp,
+    writeBatch
 } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 import { db } from "./firebase-config.js";
 
@@ -177,4 +178,24 @@ export const saveMachinePurchase = (id, purchaseData) => {
  */
 export const deleteMachinePurchase = (id) => {
     return deleteDoc(doc(db, "purchases", id));
+};
+
+/**
+ * Saves a batch of machine purchase records to Firestore.
+ * @param {Array<object>} purchases - An array of machine purchase objects to save.
+ * @returns {Promise<void>}
+ */
+export const batchSaveMachinePurchases = async (purchases) => {
+    const batch = writeBatch(db);
+
+    purchases.forEach(purchaseData => {
+        const docRef = doc(collection(db, "purchases"));
+        const dataWithTimestamp = {
+            ...purchaseData,
+            lastUpdated: serverTimestamp()
+        };
+        batch.set(docRef, dataWithTimestamp);
+    });
+
+    return batch.commit();
 };

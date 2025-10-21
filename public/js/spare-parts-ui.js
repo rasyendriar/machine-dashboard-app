@@ -1,4 +1,4 @@
-import { formatCurrency, showToast } from './utils.js';
+import { formatCurrency, showToast, formatDate } from './utils.js';
 import { saveSparePart, deleteSparePart } from './spare-parts-store.js';
 
 // --- CHART INSTANCES ---
@@ -140,7 +140,8 @@ const renderTable = () => {
     let flatData = [];
     allParts.forEach(part => {
         part.items.forEach(item => {
-            flatData.push({ ...item, ...part, id: part.id }); // Combine part and item data
+            // Add the top-level lastUpdated field to each flattened item
+            flatData.push({ ...item, ...part, id: part.id, lastUpdated: part.lastUpdated });
         });
     });
 
@@ -162,21 +163,6 @@ const renderTable = () => {
     tableBody.innerHTML = '';
     noDataMessage.classList.toggle('hidden', filteredData.length > 0);
 
-    // Update table headers to include Part Code
-    const thead = tableBody.parentElement.querySelector('thead tr');
-    thead.innerHTML = `
-        <th class="table-header">PP Number</th>
-        <th class="table-header">Project Name</th>
-        <th class="table-header">Part Code</th>
-        <th class="table-header">Product Name</th>
-        <th class="table-header">Category</th>
-        <th class="table-header text-center">Qty</th>
-        <th class="table-header">Status</th>
-        <th class="table-header">PO Date</th>
-        <th class="table-header">Total Price</th>
-        <th class="table-header text-center sticky-col-right">Actions</th>
-    `;
-
     filteredData.forEach(item => {
         const row = document.createElement('tr');
         row.className = 'fade-in-row';
@@ -188,16 +174,17 @@ const renderTable = () => {
             <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.category}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary text-center">${item.quantity}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-primary font-semibold">${item.status}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.poDate || '-'}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600 dark:text-indigo-400">${formatCurrency(item.price * item.quantity)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${formatDate(item.poDate)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600 dark:text-indigo-400">${formatCurrency((item.price || 0) * (item.quantity || 0))}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${formatDate(item.lastUpdated)}</td>
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium sticky-col-right">
                 <div class="flex justify-center items-center gap-4">
                      <span class="admin-only-inline-flex gap-4">
                         <button data-action="edit" data-id="${item.id}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300" title="Edit">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            <i data-lucide="edit" class="w-5 h-5"></i>
                         </button>
                         <button data-action="delete" data-id="${item.id}" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
                         </button>
                     </span>
                 </div>
@@ -205,6 +192,7 @@ const renderTable = () => {
         `;
         tableBody.appendChild(row);
     });
+    lucide.createIcons();
 };
 
 const updateDashboard = () => {
@@ -238,15 +226,15 @@ const updateDashboard = () => {
 
     keyMetricsContainer.innerHTML = `
         <div class="themed-card p-6 rounded-2xl shadow-lg border flex items-center gap-4">
-            <div class="bg-teal-100 dark:bg-teal-900/50 p-3 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-teal-600 dark:text-teal-300"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
+            <div class="bg-teal-100 dark:bg-teal-900/50 p-3 rounded-full"><i data-lucide="folder-kanban" class="w-6 h-6 text-teal-600 dark:text-teal-300"></i></div>
             <div><p class="text-sm themed-text-secondary">Total Projects</p><p class="text-2xl font-bold themed-text-primary">${stats.totalProjects}</p></div>
         </div>
         <div class="themed-card p-6 rounded-2xl shadow-lg border flex items-center gap-4">
-             <div class="bg-sky-100 dark:bg-sky-900/50 p-3 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-sky-600 dark:text-sky-300"><path d="M21.13 5.87a7.002 7.002 0 0 0-9.9-9.9"/><path d="M12 12a7.002 7.002 0 0 0-9.9 9.9"/><circle cx="12" cy="12" r="10"/><path d="M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="m15.5 15.5-1.5-1.5"/></svg></div>
+             <div class="bg-sky-100 dark:bg-sky-900/50 p-3 rounded-full"><i data-lucide="package" class="w-6 h-6 text-sky-600 dark:text-sky-300"></i></div>
             <div><p class="text-sm themed-text-secondary">Total Part Items</p><p class="text-2xl font-bold themed-text-primary">${stats.totalItems}</p></div>
         </div>
         <div class="themed-card p-6 rounded-2xl shadow-lg border flex items-center gap-4">
-             <div class="bg-amber-100 dark:bg-amber-900/50 p-3 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-amber-600 dark:text-amber-300"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
+             <div class="bg-amber-100 dark:bg-amber-900/50 p-3 rounded-full"><i data-lucide="banknote" class="w-6 h-6 text-amber-600 dark:text-amber-300"></i></div>
             <div><p class="text-sm themed-text-secondary">Total Value</p><p class="text-2xl font-bold themed-text-primary">${formatCurrency(stats.totalValue)}</p></div>
         </div>
         <div class="themed-card p-6 rounded-2xl shadow-lg border">
@@ -258,6 +246,7 @@ const updateDashboard = () => {
             </div>
         </div>
     `;
+    lucide.createIcons();
 
     const isDark = document.documentElement.classList.contains('dark');
     const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
@@ -318,6 +307,7 @@ export const exportSparePartsToXLSX = () => {
                 "AO Name": item.aoName || "",
                 "LPB Number": item.lpbNumber || "",
                 "LPB Date": item.lpbDate || "",
+                "Last Updated": formatDate(p.lastUpdated)
             });
         });
     });
@@ -543,5 +533,4 @@ export const getAllSpareParts = () => {
 export const redrawSparePartsDashboard = () => {
     updateDashboard();
 };
-
 

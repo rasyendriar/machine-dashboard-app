@@ -40,3 +40,46 @@ export const formatCurrency = (amount) => {
         minimumFractionDigits: 0 
     }).format(amount);
 };
+
+/**
+ * Formats a Firestore timestamp or a date string into a readable format.
+ * @param {object|string|null} dateInput - The date to format (can be a Firestore timestamp object, a date string, or null).
+ * @returns {string} The formatted date string (e.g., "Oct 21, 2025") or '-'.
+ */
+export const formatDate = (dateInput) => {
+    if (!dateInput) return '-';
+
+    let date;
+    // Check if it's a Firestore timestamp object
+    if (dateInput && typeof dateInput.toDate === 'function') {
+        date = dateInput.toDate();
+    } 
+    // Check if it's a string that needs parsing
+    else if (typeof dateInput === 'string') {
+        // Handle YYYY-MM-DD strings by correcting for timezone issues
+        const parts = dateInput.split('-');
+        if (parts.length === 3) {
+            date = new Date(parts[0], parts[1] - 1, parts[2]);
+        } else {
+            date = new Date(dateInput);
+        }
+    } 
+    // If it's already a Date object
+    else if (dateInput instanceof Date) {
+        date = dateInput;
+    } 
+    // If it's an invalid format
+    else {
+        return '-';
+    }
+
+    if (isNaN(date.getTime())) {
+        return '-';
+    }
+
+    return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric'
+    }).format(date);
+};

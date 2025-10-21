@@ -164,7 +164,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     alertConfirmBtn.addEventListener('click', () => {
-        // Determine active tab to call correct delete handler
         const activeLink = document.querySelector('.nav-link.active-nav');
         if (!activeLink) return;
         const activeTabId = activeLink.dataset.tab;
@@ -222,56 +221,66 @@ document.addEventListener('DOMContentLoaded', () => {
 
     confirmImportBtn.addEventListener('click', async () => {
         let dataToSave;
-        if (activeDataType === 'spare-part') {
-            dataToSave = getSparePartImportData();
-            if (dataToSave.length === 0) {
-                showToast("No data to import.", "error");
-                return;
-            }
-            // Group flat data by PP Number
-            const groupedByPP = dataToSave.reduce((acc, row) => {
-                const ppNumber = row['ppnumber'] || 'UNKNOWN_PP';
-                if (!acc[ppNumber]) {
-                    acc[ppNumber] = {
-                        ppNumber: row['ppnumber'],
-                        ppDate: row['ppdate'],
-                        projectName: row['projectname'],
-                        machineName: row['machinename'],
-                        category: row['category'],
-                        status: row['status'],
-                        items: []
-                    };
+        
+        try {
+            if (activeDataType === 'spare-part') {
+                dataToSave = getSparePartImportData();
+                if (dataToSave.length === 0) {
+                    showToast("No data to import.", "error");
+                    return;
                 }
-                acc[ppNumber].items.push({
-                    partCode: row['partcode'],
-                    productName: row['productname'],
-                    model: row['model'],
-                    maker: row['maker'],
-                    quantity: parseInt(row['quantity'], 10) || 0,
-                    price: parseFloat(row['price']) || 0,
-                    poNumber: row['ponumber'],
-                    poDate: row['podate'],
-                    aoName: row['aoname'],
-                    lpbNumber: row['lpbnumber'],
-                    lpbDate: row['lpbdate'],
-                });
-                return acc;
-            }, {});
-            
-            try {
+                const groupedByPP = dataToSave.reduce((acc, row) => {
+                    const ppNumber = String(row['ppnumber'] || 'UNKNOWN_PP');
+                    if (!acc[ppNumber]) {
+                        acc[ppNumber] = {
+                            ppNumber: row['ppnumber'], ppDate: row['ppdate'], projectName: row['projectname'], machineName: row['machinename'], category: row['category'], status: row['status'], items: []
+                        };
+                    }
+                    acc[ppNumber].items.push({
+                        partCode: row['partcode'], productName: row['productname'], model: row['model'], maker: row['maker'], quantity: parseInt(row['quantity'], 10) || 0, price: parseFloat(row['price']) || 0, poNumber: row['ponumber'], poDate: row['podate'], aoName: row['aoname'], lpbNumber: row['lpbnumber'], lpbDate: row['lpbdate'],
+                    });
+                    return acc;
+                }, {});
+                
                 await batchSaveSpareParts(Object.values(groupedByPP));
-                showToast(`${dataToSave.length} records imported successfully!`, 'success');
-            } catch (error) {
-                 showToast('An error occurred during import.', 'error');
-                 console.error("Batch save error:", error);
+
+            } else if (activeDataType === 'machine') {
+                dataToSave = getMachineImportData();
+                if (dataToSave.length === 0) {
+                    showToast("No data to import.", "error");
+                    return;
+                }
+
+                const formattedData = dataToSave.map(row => ({
+                    noDrawing: String(row['nodrawing'] || ''),
+                    projectCode: String(row['projectcode'] || ''),
+                    itemName: String(row['itemname'] || ''),
+                    quantity: parseInt(row['qty'] || row['quantity'], 10) || 0,
+                    dueDate: row['duedate'] || '',
+                    machinePic: String(row['pic'] || ''),
+                    status: String(row['purchasingstatus'] || 'Pending Approval'),
+                    noPp: String(row['nopp'] || ''),
+                    sphDate: row['sphdate'] || '',
+                    noSph: { text: String(row['nosph'] || ''), link: '' },
+                    initialQuotation: parseFloat(row['initialquotation']) || 0,
+                    poDate: row['podate'] || '',
+                    poNumber: String(row['ponumber'] || ''),
+                    lpbNumber: String(row['lpbnumber'] || ''),
+                    negotiatedQuotation: parseFloat(row['negotiatedquotation'] || row['quotationafternegotiation']) || 0,
+                    drawingImgUrl: null // As requested
+                }));
+                
+                await batchSaveMachinePurchases(formattedData);
             }
 
-        } else if (activeDataType === 'machine') {
-            // Placeholder for machine import logic
-            showToast("Machine import is not yet implemented.", "error");
+            showToast(`${dataToSave.length} records imported successfully!`, 'success');
+
+        } catch (error) {
+             showToast('An error occurred during import.', 'error');
+             console.error("Batch save error:", error);
+        } finally {
+            closeModal();
         }
-        
-        closeModal();
     });
 
     companyNameInput.addEventListener('input', (e) => localStorage.setItem('companyName', e.target.value));

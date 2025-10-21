@@ -39,9 +39,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabContents = document.querySelectorAll('.tab-content');
     const headerTitle = document.getElementById('header-title');
 
-    // --- MODAL ELEMENTS ---
+    // --- MODAL & ACTION BUTTONS ---
     const reportModal = document.getElementById('report-modal');
     const reportModalTitle = document.getElementById('report-modal-title');
+    const machineExportBtn = document.getElementById('machine-export-btn'); // FIX: Added
+    const sparePartExportBtn = document.getElementById('spare-part-export-btn'); // FIX: Added
     const closeReportModalBtn = document.getElementById('close-report-modal');
     const companyNameInput = document.getElementById('company-name');
     const companyLogoInput = document.getElementById('company-logo');
@@ -51,8 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const importModal = document.getElementById('import-modal');
     const importModalTitle = document.getElementById('import-modal-title');
-    const machineImportBtn = document.getElementById('machine-import-btn');
-    const sparePartImportBtn = document.getElementById('spare-part-import-btn');
+    const machineImportBtn = document.getElementById('machine-import-btn'); // FIX: Added
+    const sparePartImportBtn = document.getElementById('spare-part-import-btn'); // FIX: Added
     const closeImportModalBtn = document.getElementById('close-import-modal');
     const cancelImportBtn = document.getElementById('cancel-import-btn');
     const confirmImportBtn = document.getElementById('confirm-import-btn');

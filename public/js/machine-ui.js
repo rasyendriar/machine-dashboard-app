@@ -500,8 +500,11 @@ const handleFileImport = (event) => {
                 return;
             }
 
-            const headers = jsonData[0].map(h => String(h).trim().toLowerCase());
-            const dataRows = jsonData.slice(1);
+            const headers = jsonData[0].map(h => String(h || '').trim().toLowerCase());
+            let dataRows = jsonData.slice(1);
+            
+            // Filter out empty rows before processing
+            dataRows = dataRows.filter(row => row.some(cell => cell !== null && cell !== undefined && cell !== ''));
 
             parsedImportData = dataRows.map(row => {
                 const rowData = {};
@@ -510,9 +513,22 @@ const handleFileImport = (event) => {
                     rowData[key] = row[index];
                 });
                 return rowData;
+            }).filter(item => {
+                // Ensure that we only process items that have an item name
+                return item.itemname && String(item.itemname).trim() !== '';
             });
 
-            displayImportPreview(headers, dataRows);
+            if (parsedImportData.length === 0) {
+                 showToast("No valid data found in the file. Make sure the 'itemname' column is filled.", "error");
+                 return;
+            }
+
+            // We need to pass the original headers and the *filtered* data rows for the preview
+            const validDataRowsForPreview = parsedImportData.map(parsedRow => {
+                 return headers.map(header => parsedRow[header.replace(/[^a-z0-9]/gi, '')] || '');
+            });
+
+            displayImportPreview(headers, validDataRowsForPreview);
         } catch (error) {
             console.error("Error reading file:", error);
             showToast("Failed to read or parse the file.", "error");
@@ -615,4 +631,3 @@ export const resetImportModal = () => {
     importPreviewTable.innerHTML = '';
     parsedImportData = [];
 };
-

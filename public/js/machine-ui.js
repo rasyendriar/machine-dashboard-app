@@ -1,4 +1,4 @@
-import { formatCurrency, showToast } from './utils.js';
+import { formatCurrency, showToast, formatDate } from './utils.js';
 import { saveMachinePurchase, deleteMachinePurchase, uploadDrawingToDrive } from './machine-store.js';
 
 // --- CHART INSTANCES ---
@@ -120,23 +120,25 @@ const renderTable = () => {
             <td class="px-6 py-4 whitespace-nowrap">${getProgressStatusDisplay(p)}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium themed-text-primary">${p.status || 'N/A'}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600 dark:text-indigo-400">${formatCurrency(totalNego)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${formatDate(p.lastUpdated)}</td>
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium sticky-col-right">
                 <div class="flex justify-center items-center gap-4">
                     <button data-action="view" data-id="${p.id}" class="text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300" title="View Details">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        <i data-lucide="eye" class="w-5 h-5"></i>
                     </button>
                     <span class="admin-only-inline-flex gap-4">
                         <button data-action="edit" data-id="${p.id}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300" title="Edit">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            <i data-lucide="edit" class="w-5 h-5"></i>
                         </button>
                         <button data-action="delete" data-id="${p.id}" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
                         </button>
                     </span>
                 </div>
             </td>`;
         tableBody.appendChild(row);
     });
+    lucide.createIcons();
 };
 
 const updateDashboard = () => {
@@ -172,15 +174,15 @@ const updateDashboard = () => {
 
     keyMetricsContainer.innerHTML = `
         <div class="themed-card p-6 rounded-2xl shadow-lg border flex items-center gap-4">
-            <div class="bg-indigo-100 dark:bg-indigo-900/50 p-3 rounded-full"><svg class="w-6 h-6 text-indigo-600 dark:text-indigo-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.438.995s.145.755.438.995l1.003.827c.485.4.664 1.07.26 1.431l-1.296 2.247a1.125 1.125 0 01-1.37.49l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.52 6.52 0 01-.22-.127c-.324-.196-.72-.257-1.075-.124l-1.217.456a1.125 1.125 0 01-1.37-.49l-1.296-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.437-.995s-.145-.755-.437-.995l-1.004-.827a1.125 1.125 0 01-.26-1.431l1.296-2.247a1.125 1.125 0 011.37-.49l1.217.456c.355.133.75.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg></div>
+            <div class="bg-indigo-100 dark:bg-indigo-900/50 p-3 rounded-full"><i data-lucide="folder-kanban" class="w-6 h-6 text-indigo-600 dark:text-indigo-300"></i></div>
             <div><p class="text-sm themed-text-secondary">Total Projects</p><p class="text-2xl font-bold themed-text-primary">${stats.totalProjects}</p></div>
         </div>
          <div class="themed-card p-6 rounded-2xl shadow-lg border flex items-center gap-4">
-            <div class="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-full"><svg class="w-6 h-6 text-blue-600 dark:text-blue-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25A2.25 2.25 0 0113.5 8.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg></div>
+            <div class="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-full"><i data-lucide="boxes" class="w-6 h-6 text-blue-600 dark:text-blue-300"></i></div>
             <div><p class="text-sm themed-text-secondary">Total Items</p><p class="text-2xl font-bold themed-text-primary">${stats.totalItems}</p></div>
         </div>
         <div class="themed-card p-6 rounded-2xl shadow-lg border flex items-center gap-4">
-            <div class="bg-green-100 dark:bg-green-900/50 p-3 rounded-full"><svg class="w-6 h-6 text-green-600 dark:text-green-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /></svg></div>
+            <div class="bg-green-100 dark:bg-green-900/50 p-3 rounded-full"><i data-lucide="banknote" class="w-6 h-6 text-green-600 dark:text-green-300"></i></div>
             <div><p class="text-sm themed-text-secondary">Total Value</p><p class="text-2xl font-bold themed-text-primary">${formatCurrency(stats.totalValue)}</p></div>
         </div>
         <div class="themed-card p-6 rounded-2xl shadow-lg border">
@@ -192,6 +194,7 @@ const updateDashboard = () => {
             </div>
         </div>
     `;
+    lucide.createIcons();
 
     const isDark = document.documentElement.classList.contains('dark');
     const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
@@ -314,7 +317,7 @@ const handleTableClick = (e) => {
         document.getElementById('details-machine-pic').textContent = item.machinePic || '-';
         document.getElementById('details-quantity').textContent = item.quantity || '-';
         document.getElementById('details-progress-status').innerHTML = getProgressStatusDisplay(item);
-        document.getElementById('details-due-date').textContent = item.dueDate || '-';
+        document.getElementById('details-due-date').textContent = formatDate(item.dueDate);
         document.getElementById('details-status').textContent = item.status || '-';
         document.getElementById('details-no-pp').textContent = item.noPp || '-';
         const sphEl = document.getElementById('details-no-sph');
@@ -323,8 +326,8 @@ const handleTableClick = (e) => {
         } else {
             sphEl.textContent = (typeof item.noSph === 'object' ? item.noSph.text : item.noSph) || '-';
         }
-        document.getElementById('details-sph-date').textContent = item.sphDate || '-';
-        document.getElementById('details-po-date').textContent = item.poDate || '-';
+        document.getElementById('details-sph-date').textContent = formatDate(item.sphDate);
+        document.getElementById('details-po-date').textContent = formatDate(item.poDate);
         document.getElementById('details-po-number').textContent = item.poNumber || '-';
         document.getElementById('details-lpb-number').textContent = item.lpbNumber || '-';
         document.getElementById('details-initial-quotation').textContent = formatCurrency(item.initialQuotation);
@@ -411,6 +414,7 @@ export const exportMachineToXLSX = () => {
         "PO Date": p.poDate || "",
         "PO Number": p.poNumber || "",
         "LPB Number": p.lpbNumber || "",
+        "Last Updated": formatDate(p.lastUpdated)
     }));
 
     if (dataToExport.length === 0) {
@@ -524,5 +528,4 @@ export const getAllPurchases = () => {
 export const redrawMachineDashboard = () => {
     updateDashboard();
 };
-
 

@@ -112,25 +112,25 @@ const renderTable = () => {
         const row = document.createElement('tr');
         row.className = 'fade-in-row';
         row.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium themed-text-primary">${p.projectCode || '-'}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${p.noDrawing}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${p.itemName}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${p.machinePic || '-'}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary text-center">${p.quantity}</td>
-            <td class="px-6 py-4 whitespace-nowrap">${getProgressStatusDisplay(p)}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium themed-text-primary">${p.status || 'N/A'}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600 dark:text-indigo-400">${formatCurrency(totalNego)}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${formatDate(p.lastUpdated)}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium sticky-col-right">
+            <td data-label="Project" class="px-6 py-4 whitespace-nowrap text-sm font-medium themed-text-primary">${p.projectCode || '-'}</td>
+            <td data-label="No. Drawing" class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${p.noDrawing}</td>
+            <td data-label="Item Name" class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${p.itemName}</td>
+            <td data-label="PIC" class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${p.machinePic || '-'}</td>
+            <td data-label="Qty" class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary text-center">${p.quantity}</td>
+            <td data-label="Progress" class="px-6 py-4 whitespace-nowrap">${getProgressStatusDisplay(p)}</td>
+            <td data-label="Status" class="px-6 py-4 whitespace-nowrap text-sm font-medium themed-text-primary">${p.status || 'N/A'}</td>
+            <td data-label="Total Price" class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600 dark:text-indigo-400">${formatCurrency(totalNego)}</td>
+            <td data-label="Last Updated" class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${formatDate(p.lastUpdated)}</td>
+            <td data-label="Actions" class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium sticky-col-right">
                 <div class="flex justify-center items-center gap-4">
-                    <button data-action="view" data-id="${p.id}" class="text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300" title="View Details">
+                    <button data-action="view" data-id="${p.id}" class="text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300" title="View Details" aria-label="View Details">
                         <i data-lucide="eye" class="w-5 h-5"></i>
                     </button>
                     <span class="admin-only-inline-flex gap-4">
-                        <button data-action="edit" data-id="${p.id}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300" title="Edit">
+                        <button data-action="edit" data-id="${p.id}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300" title="Edit" aria-label="Edit Item">
                             <i data-lucide="edit" class="w-5 h-5"></i>
                         </button>
-                        <button data-action="delete" data-id="${p.id}" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete">
+                        <button data-action="delete" data-id="${p.id}" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete" aria-label="Delete Item">
                             <i data-lucide="trash-2" class="w-5 h-5"></i>
                         </button>
                     </span>

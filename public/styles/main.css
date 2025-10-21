@@ -180,8 +180,9 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 .required-label::after { content: '*'; color: #ef4444; margin-left: 4px; }
 
 /* STICKY HEADER & COLUMN FIX */
-.table-container { 
-    overflow: auto; /* Changed from clip to auto */
+.table-container {
+    max-height: 65vh; /* This creates the bounded, scrollable box */
+    overflow: auto;   /* This enables both vertical and horizontal scrolling */
 }
 .sticky-header th { 
     position: sticky; 

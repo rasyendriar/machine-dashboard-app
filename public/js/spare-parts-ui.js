@@ -17,8 +17,7 @@ const partItemsContainer = document.getElementById('part-items-container');
 const addPartBtn = document.getElementById('add-part-btn');
 
 // Search/Filter Elements
-const searchPpInput = document.getElementById('spare-part-search-pp');
-const searchProjectInput = document.getElementById('spare-part-search-project');
+const searchInput = document.getElementById('spare-part-search-input'); // Unified search bar
 const filterCategorySelect = document.getElementById('spare-part-filter-category');
 
 // Modals
@@ -133,11 +132,10 @@ const resetForm = () => {
 
 
 /**
- * Renders the spare parts table with each item on its own row.
+ * Renders the spare parts table with each item on its own row, based on unified search.
  */
 const renderTable = () => {
-    const searchPp = searchPpInput.value.toLowerCase();
-    const searchProject = searchProjectInput.value.toLowerCase();
+    const searchTerm = searchInput.value.toLowerCase();
     const filterCategory = filterCategorySelect.value;
 
     let flatData = [];
@@ -148,10 +146,17 @@ const renderTable = () => {
     });
 
     const filteredData = flatData.filter(item => {
-        const ppMatch = !searchPp || (item.ppNumber && item.ppNumber.toLowerCase().includes(searchPp));
-        const projectMatch = !searchProject || (item.projectName && item.projectName.toLowerCase().includes(searchProject));
         const categoryMatch = filterCategory === 'all' || item.category === filterCategory;
-        return ppMatch && projectMatch && categoryMatch;
+
+        const searchMatch = !searchTerm || (
+            (item.ppNumber && item.ppNumber.toLowerCase().includes(searchTerm)) ||
+            (item.projectName && item.projectName.toLowerCase().includes(searchTerm)) ||
+            (item.machineName && item.machineName.toLowerCase().includes(searchTerm)) ||
+            (item.productName && item.productName.toLowerCase().includes(searchTerm)) ||
+            (item.model && item.model.toLowerCase().includes(searchTerm))
+        );
+
+        return categoryMatch && searchMatch;
     });
 
     tableBody.innerHTML = '';
@@ -186,7 +191,7 @@ const renderTable = () => {
     });
 };
 
-// ... (updateDashboard function remains the same) ...
+// ... (updateDashboard and export functions remain the same) ...
 const updateDashboard = () => {
     if (!keyMetricsContainer || !pieChartCanvas || !barChartCanvas) return;
 
@@ -478,8 +483,7 @@ export const initializeSparePartsUI = () => {
     addPartBtn.addEventListener('click', () => createPartItemRow());
     cancelEditBtn.addEventListener('click', resetForm);
     
-    searchPpInput.addEventListener('input', renderTable);
-    searchProjectInput.addEventListener('input', renderTable);
+    searchInput.addEventListener('input', renderTable);
     filterCategorySelect.addEventListener('change', renderTable);
     
     partItemsContainer.addEventListener('click', (e) => {

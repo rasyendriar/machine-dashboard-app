@@ -14,7 +14,7 @@ import { listenForSpareParts, batchSaveSpareParts } from './spare-parts-store.js
 import { 
     initializeSparePartsUI, 
     updateSparePartsUI, 
-    handleSparePartDelete, 
+    handleMachineDelete, 
     redrawSparePartsDashboard, 
     exportSparePartsToXLSX, 
     exportSparePartsToPDF,
@@ -22,6 +22,37 @@ import {
     resetImportModal as resetSparePartImportModal
 } from './spare-parts-ui.js';
 import { showToast } from './utils.js';
+
+/**
+ * Converts an Excel date serial number to a YYYY-MM-DD string.
+ * Also handles date strings.
+ * @param {*} excelDate - The date value from the Excel cell.
+ * @returns {string|null} The formatted date string or null if invalid.
+ */
+const excelDateToJSDate = (excelDate) => {
+    if (!excelDate) {
+        return null;
+    }
+    // If it's a number (Excel serial date)
+    if (typeof excelDate === 'number') {
+        const date = new Date(Math.round((excelDate - 25569) * 86400 * 1000));
+        if (isNaN(date.getTime())) return null;
+        return date.toISOString().split('T')[0];
+    }
+    // If it's already a Date object
+    if (excelDate instanceof Date) {
+         if (isNaN(excelDate.getTime())) return null;
+        return excelDate.toISOString().split('T')[0];
+    }
+    // If it's a string, try to parse it
+    if (typeof excelDate === 'string') {
+        const date = new Date(excelDate);
+        if (isNaN(date.getTime())) return null;
+        return date.toISOString().split('T')[0];
+    }
+    return null;
+};
+
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -235,28 +266,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     const ppNumber = String(row['ppnumber'] || 'UNKNOWN_PP');
                     if (!acc[ppNumber]) {
                         acc[ppNumber] = {
-                            // FIX: Ensure ppNumber is always a string, even if null/undefined in Excel
                             ppNumber: String(row['ppnumber'] || ''),
-                            ppDate: row['ppdate'],
-                            projectName: row['projectname'],
-                            machineName: row['machinename'],
-                            category: row['category'],
-                            status: row['status'],
+                            ppDate: excelDateToJSDate(row['ppdate']) || null,
+                            projectName: String(row['projectname'] || ''),
+                            machineName: String(row['machinename'] || ''),
+                            category: String(row['category'] || 'Mechanical'),
+                            status: String(row['status'] || 'Approval'),
                             items: []
                         };
                     }
                     acc[ppNumber].items.push({
-                        partCode: row['partcode'],
-                        productName: row['productname'],
-                        model: row['model'],
-                        maker: row['maker'],
+                        partCode: String(row['partcode'] || ''),
+                        productName: String(row['productname'] || ''),
+                        model: String(row['model'] || ''),
+                        maker: String(row['maker'] || ''),
                         quantity: parseInt(row['quantity'], 10) || 0,
                         price: parseFloat(row['price']) || 0,
-                        poNumber: row['ponumber'],
-                        poDate: row['podate'],
-                        aoName: row['aoname'],
-                        lpbNumber: row['lpbnumber'],
-                        lpbDate: row['lpbdate'],
+                        poNumber: String(row['ponumber'] || ''),
+                        poDate: excelDateToJSDate(row['podate']) || null,
+                        aoName: String(row['aoname'] || ''),
+                        lpbNumber: String(row['lpbnumber'] || ''),
+                        lpbDate: excelDateToJSDate(row['lpbdate']) || null,
                     });
                     return acc;
                 }, {});
@@ -275,18 +305,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     projectCode: String(row['projectcode'] || ''),
                     itemName: String(row['itemname'] || ''),
                     quantity: parseInt(row['qty'] || row['quantity'], 10) || 0,
-                    dueDate: row['duedate'] || '',
+                    dueDate: excelDateToJSDate(row['duedate']) || null,
                     machinePic: String(row['pic'] || ''),
                     status: String(row['purchasingstatus'] || 'Pending Approval'),
                     noPp: String(row['nopp'] || ''),
-                    sphDate: row['sphdate'] || '',
+                    sphDate: excelDateToJSDate(row['sphdate']) || null,
                     noSph: { text: String(row['nosph'] || ''), link: '' },
                     initialQuotation: parseFloat(row['initialquotation']) || 0,
-                    poDate: row['podate'] || '',
+                    poDate: excelDateToJSDate(row['podate']) || null,
                     poNumber: String(row['ponumber'] || ''),
                     lpbNumber: String(row['lpbnumber'] || ''),
                     negotiatedQuotation: parseFloat(row['negotiatedquotation'] || row['quotationafternegotiation']) || 0,
-                    drawingImgUrl: null // As requested
+                    drawingImgUrl: null
                 }));
                 
                 await batchSaveMachinePurchases(formattedData);
@@ -327,3 +357,4 @@ document.addEventListener('DOMContentLoaded', () => {
     syncIconWithTheme();
     checkSidebarState();
 });
+

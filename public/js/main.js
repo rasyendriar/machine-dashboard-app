@@ -1,8 +1,27 @@
 import { initializeAuth } from './auth.js';
-import { listenForMachinePurchases, initializeGoogleDriveApi } from './machine-store.js';
-import { initializeMachineUI, updateMachineUI, handleMachineDelete, redrawMachineDashboard, exportMachineToXLSX, exportMachineToPDF } from './machine-ui.js';
-import { listenForSpareParts } from './spare-parts-store.js';
-import { initializeSparePartsUI, updateSparePartsUI, handleSparePartDelete, redrawSparePartsDashboard, exportSparePartsToXLSX, exportSparePartsToPDF } from './spare-parts-ui.js';
+import { listenForMachinePurchases, initializeGoogleDriveApi, batchSaveMachinePurchases } from './machine-store.js';
+import { 
+    initializeMachineUI, 
+    updateMachineUI, 
+    handleMachineDelete, 
+    redrawMachineDashboard, 
+    exportMachineToXLSX, 
+    exportMachineToPDF,
+    getParsedImportData as getMachineImportData,
+    resetImportModal as resetMachineImportModal
+} from './machine-ui.js';
+import { listenForSpareParts, batchSaveSpareParts } from './spare-parts-store.js';
+import { 
+    initializeSparePartsUI, 
+    updateSparePartsUI, 
+    handleSparePartDelete, 
+    redrawSparePartsDashboard, 
+    exportSparePartsToXLSX, 
+    exportSparePartsToPDF,
+    getParsedImportData as getSparePartImportData,
+    resetImportModal as resetSparePartImportModal
+} from './spare-parts-ui.js';
+import { showToast } from './utils.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -20,11 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabContents = document.querySelectorAll('.tab-content');
     const headerTitle = document.getElementById('header-title');
 
-    // --- EXPORT MODAL ELEMENTS ---
+    // --- MODAL ELEMENTS ---
     const reportModal = document.getElementById('report-modal');
     const reportModalTitle = document.getElementById('report-modal-title');
-    const machineExportBtn = document.getElementById('machine-export-btn');
-    const sparePartExportBtn = document.getElementById('spare-part-export-btn');
     const closeReportModalBtn = document.getElementById('close-report-modal');
     const companyNameInput = document.getElementById('company-name');
     const companyLogoInput = document.getElementById('company-logo');
@@ -32,10 +49,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const exportPdfBtn = document.getElementById('export-pdf');
     const exportXlsxBtn = document.getElementById('export-xlsx');
 
+    const importModal = document.getElementById('import-modal');
+    const importModalTitle = document.getElementById('import-modal-title');
+    const machineImportBtn = document.getElementById('machine-import-btn');
+    const sparePartImportBtn = document.getElementById('spare-part-import-btn');
+    const closeImportModalBtn = document.getElementById('close-import-modal');
+    const cancelImportBtn = document.getElementById('cancel-import-btn');
+    const confirmImportBtn = document.getElementById('confirm-import-btn');
+
     // --- STATE ---
     let unsubscribeMachines = null;
     let unsubscribeSpareParts = null;
-    let activeExportType = null; // 'machine' or 'spare-part'
+    let activeModalType = null; // 'export' or 'import'
+    let activeDataType = null; // 'machine' or 'spare-part'
 
     // --- THEME & UI TOGGLES ---
     const syncIconWithTheme = () => {
@@ -115,15 +141,12 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebar.classList.toggle('collapsed');
         mainContent.classList.toggle('collapsed');
         localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-        // Trigger a resize event to make charts redraw correctly after animation
         window.dispatchEvent(new Event('resize'));
     });
 
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
-            // Do nothing if it's the logout button
             if (link.id === 'logout-btn') return;
-
             navLinks.forEach(l => l.classList.remove('active-nav'));
             tabContents.forEach(c => c.classList.add('hidden'));
 
@@ -133,60 +156,117 @@ document.addEventListener('DOMContentLoaded', () => {
                 targetContent.classList.remove('hidden');
             }
             
-            // Update header title based on the clicked link
             const title = link.querySelector('.sidebar-text').textContent;
             headerTitle.textContent = title;
             
-            // Check visibility state for the newly active dashboard
             checkDashboardVisibility();
         });
     });
 
     alertConfirmBtn.addEventListener('click', () => {
-        const activeLink = document.querySelector('.nav-link.active-nav');
-        if (!activeLink) return;
-        
-        const activeTabId = activeLink.dataset.tab;
-
-        if (activeTabId === 'machine-purchase-section') {
+        if (activeDataType === 'machine') {
             handleMachineDelete();
-        } else if (activeTabId === 'spare-parts-section') {
+        } else if (activeDataType === 'spare-part') {
             handleSparePartDelete();
         }
     });
 
-    // --- EXPORT LOGIC ---
-    machineExportBtn.addEventListener('click', () => {
-        activeExportType = 'machine';
-        reportModalTitle.textContent = 'Machine Purchase Report';
-        reportModal.classList.remove('hidden');
-    });
+    // --- MODAL & ACTION LOGIC ---
+    const openModal = (type, dataType) => {
+        activeModalType = type;
+        activeDataType = dataType;
+        if (type === 'export') {
+            reportModalTitle.textContent = `${dataType === 'machine' ? 'Machine Purchase' : 'Spare Parts'} Report`;
+            reportModal.classList.remove('hidden');
+        } else if (type === 'import') {
+            importModalTitle.textContent = `Import ${dataType === 'machine' ? 'Machine' : 'Spare Part'} Data`;
+            importModal.classList.remove('hidden');
+        }
+    };
 
-    sparePartExportBtn.addEventListener('click', () => {
-        activeExportType = 'spare-part';
-        reportModalTitle.textContent = 'Spare Parts Report';
-        reportModal.classList.remove('hidden');
-    });
+    const closeModal = () => {
+        if (activeModalType === 'export') {
+            reportModal.classList.add('hidden');
+        } else if (activeModalType === 'import') {
+            importModal.classList.add('hidden');
+            if (activeDataType === 'machine') resetMachineImportModal();
+            else if (activeDataType === 'spare-part') resetSparePartImportModal();
+        }
+        activeModalType = null;
+        activeDataType = null;
+    };
 
-    closeReportModalBtn.addEventListener('click', () => {
-        reportModal.classList.add('hidden');
-        activeExportType = null;
-    });
+    machineExportBtn.addEventListener('click', () => openModal('export', 'machine'));
+    sparePartExportBtn.addEventListener('click', () => openModal('export', 'spare-part'));
+    machineImportBtn.addEventListener('click', () => openModal('import', 'machine'));
+    sparePartImportBtn.addEventListener('click', () => openModal('import', 'spare-part'));
+    
+    closeReportModalBtn.addEventListener('click', closeModal);
+    closeImportModalBtn.addEventListener('click', closeModal);
+    cancelImportBtn.addEventListener('click', closeModal);
 
     exportPdfBtn.addEventListener('click', () => {
-        if (activeExportType === 'machine') {
-            exportMachineToPDF();
-        } else if (activeExportType === 'spare-part') {
-            exportSparePartsToPDF();
-        }
+        if (activeDataType === 'machine') exportMachineToPDF();
+        else if (activeDataType === 'spare-part') exportSparePartsToPDF();
     });
 
     exportXlsxBtn.addEventListener('click', () => {
-        if (activeExportType === 'machine') {
-            exportMachineToXLSX();
-        } else if (activeExportType === 'spare-part') {
-            exportSparePartsToXLSX();
+        if (activeDataType === 'machine') exportMachineToXLSX();
+        else if (activeDataType === 'spare-part') exportSparePartsToXLSX();
+    });
+
+    confirmImportBtn.addEventListener('click', async () => {
+        let dataToSave;
+        if (activeDataType === 'spare-part') {
+            dataToSave = getSparePartImportData();
+            if (dataToSave.length === 0) {
+                showToast("No data to import.", "error");
+                return;
+            }
+            // Group flat data by PP Number
+            const groupedByPP = dataToSave.reduce((acc, row) => {
+                const ppNumber = row['ppnumber'] || 'UNKNOWN_PP';
+                if (!acc[ppNumber]) {
+                    acc[ppNumber] = {
+                        ppNumber: row['ppnumber'],
+                        ppDate: row['ppdate'],
+                        projectName: row['projectname'],
+                        machineName: row['machinename'],
+                        category: row['category'],
+                        status: row['status'],
+                        items: []
+                    };
+                }
+                acc[ppNumber].items.push({
+                    partCode: row['partcode'],
+                    productName: row['productname'],
+                    model: row['model'],
+                    maker: row['maker'],
+                    quantity: parseInt(row['quantity'], 10) || 0,
+                    price: parseFloat(row['price']) || 0,
+                    poNumber: row['ponumber'],
+                    poDate: row['podate'],
+                    aoName: row['aoname'],
+                    lpbNumber: row['lpbnumber'],
+                    lpbDate: row['lpbdate'],
+                });
+                return acc;
+            }, {});
+            
+            try {
+                await batchSaveSpareParts(Object.values(groupedByPP));
+                showToast(`${dataToSave.length} records imported successfully!`, 'success');
+            } catch (error) {
+                 showToast('An error occurred during import.', 'error');
+                 console.error("Batch save error:", error);
+            }
+
+        } else if (activeDataType === 'machine') {
+            // Placeholder for machine import logic
+            showToast("Machine import is not yet implemented.", "error");
         }
+        
+        closeModal();
     });
 
     companyNameInput.addEventListener('input', (e) => localStorage.setItem('companyName', e.target.value));
@@ -202,7 +282,6 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsDataURL(file);
     });
 
-    // Load saved report info from local storage
     companyNameInput.value = localStorage.getItem('companyName') || '';
     const savedLogo = localStorage.getItem('companyLogo');
     if (savedLogo) {

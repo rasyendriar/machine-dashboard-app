@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebarToggleBtn = document.getElementById('sidebar-toggle');
     const navLinks = document.querySelectorAll('.nav-link');
     const tabContents = document.querySelectorAll('.tab-content');
+    const headerTitle = document.getElementById('header-title');
 
 
     // --- UNSUBSCRIBE FUNCTIONS ---
@@ -43,10 +44,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const checkDashboardVisibility = () => {
-        if (localStorage.getItem('dashboardHidden') === 'true') {
-            dashboardPanel.classList.add('hidden');
-            toggleDashboardIcon.classList.add('rotate-180');
-        }
+        const dashboardIsHidden = localStorage.getItem('dashboardHidden') === 'true';
+        dashboardPanel.classList.toggle('hidden', dashboardIsHidden);
+        toggleDashboardIcon.classList.toggle('rotate-180', dashboardIsHidden);
     };
     
     const checkSidebarState = () => {
@@ -109,10 +109,14 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebar.classList.toggle('collapsed');
         mainContent.classList.toggle('collapsed');
         localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        // Dispatch a resize event to make charts readjust
+        window.dispatchEvent(new Event('resize'));
     });
 
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
+            if (link.id === 'logout-btn') return;
+
             navLinks.forEach(l => l.classList.remove('active-nav'));
             tabContents.forEach(c => c.classList.add('hidden'));
 
@@ -121,6 +125,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if(targetContent) {
                 targetContent.classList.remove('hidden');
             }
+            
+            // Update header title
+            const title = link.querySelector('.sidebar-text').textContent;
+            headerTitle.textContent = title;
         });
     });
     // --- END NEW SIDEBAR LOGIC ---
@@ -169,4 +177,3 @@ document.addEventListener('DOMContentLoaded', () => {
     syncIconWithTheme();
     checkSidebarState();
 });
-

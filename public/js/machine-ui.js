@@ -35,10 +35,17 @@ const alertTitle = document.getElementById('alert-title');
 const detailsModal = document.getElementById('details-modal');
 const closeDetailsModalBtn = document.getElementById('close-details-modal');
 
+// Import Modal Elements
+const importFileInput = document.getElementById('import-file-input');
+const importPreviewContainer = document.getElementById('import-preview-container');
+const importPreviewTable = document.getElementById('import-preview-table');
+const confirmImportBtn = document.getElementById('confirm-import-btn');
+
 // --- STATE ---
 let allPurchases = [];
 let imageFileToUpload = null;
 let itemToDeleteId = null;
+let parsedImportData = []; // To hold data from the imported file
 
 // --- PRIVATE FUNCTIONS ---
 
@@ -475,6 +482,66 @@ export const exportMachineToPDF = () => {
     doc.save("Machine_Purchase_Report.pdf");
 };
 
+// --- IMPORT FUNCTIONS ---
+const handleFileImport = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+            if (jsonData.length < 2) {
+                showToast("The file is empty or has no data rows.", "error");
+                return;
+            }
+
+            const headers = jsonData[0].map(h => String(h).trim().toLowerCase());
+            const dataRows = jsonData.slice(1);
+
+            parsedImportData = dataRows.map(row => {
+                const rowData = {};
+                headers.forEach((header, index) => {
+                    const key = header.replace(/[^a-z0-9]/gi, ''); // Sanitize header
+                    rowData[key] = row[index];
+                });
+                return rowData;
+            });
+
+            displayImportPreview(headers, dataRows);
+        } catch (error) {
+            console.error("Error reading file:", error);
+            showToast("Failed to read or parse the file.", "error");
+        }
+    };
+    reader.onerror = () => showToast("Error reading the file.", "error");
+    reader.readAsArrayBuffer(file);
+};
+
+const displayImportPreview = (headers, dataRows) => {
+    let tableHTML = `<table class="min-w-full divide-y themed-border">
+        <thead class="themed-header"><tr>`;
+    headers.forEach(header => {
+        tableHTML += `<th class="px-4 py-2 text-left text-xs font-medium themed-text-secondary uppercase tracking-wider">${header}</th>`;
+    });
+    tableHTML += `</tr></thead><tbody class="themed-card divide-y themed-border">`;
+    dataRows.forEach(row => {
+        tableHTML += `<tr>`;
+        row.forEach(cell => {
+            tableHTML += `<td class="px-4 py-2 whitespace-nowrap text-sm themed-text-secondary">${cell || ''}</td>`;
+        });
+        tableHTML += `</tr>`;
+    });
+    tableHTML += `</tbody></table>`;
+
+    importPreviewTable.innerHTML = tableHTML;
+    importPreviewContainer.classList.remove('hidden');
+    confirmImportBtn.classList.remove('hidden');
+};
 
 // --- PUBLIC FUNCTIONS ---
 
@@ -512,6 +579,14 @@ export const initializeMachineUI = () => {
         customAlert.classList.add('hidden');
     });
     closeDetailsModalBtn.addEventListener('click', () => detailsModal.classList.add('hidden'));
+
+    // Connect file input listener
+    importFileInput.addEventListener('change', (e) => {
+        // Only handle if the machine import is active
+        if (document.getElementById('import-modal-title').textContent.includes('Machine')) {
+            handleFileImport(e);
+        }
+    });
 };
 
 export const updateMachineUI = (purchases) => {
@@ -527,5 +602,17 @@ export const getAllPurchases = () => {
 
 export const redrawMachineDashboard = () => {
     updateDashboard();
+};
+
+export const getParsedImportData = () => {
+    return parsedImportData;
+};
+
+export const resetImportModal = () => {
+    importFileInput.value = '';
+    importPreviewContainer.classList.add('hidden');
+    confirmImportBtn.classList.add('hidden');
+    importPreviewTable.innerHTML = '';
+    parsedImportData = [];
 };
 

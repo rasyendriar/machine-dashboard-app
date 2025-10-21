@@ -235,11 +235,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     const ppNumber = String(row['ppnumber'] || 'UNKNOWN_PP');
                     if (!acc[ppNumber]) {
                         acc[ppNumber] = {
-                            ppNumber: row['ppnumber'], ppDate: row['ppdate'], projectName: row['projectname'], machineName: row['machinename'], category: row['category'], status: row['status'], items: []
+                            // FIX: Ensure ppNumber is always a string, even if null/undefined in Excel
+                            ppNumber: String(row['ppnumber'] || ''),
+                            ppDate: row['ppdate'],
+                            projectName: row['projectname'],
+                            machineName: row['machinename'],
+                            category: row['category'],
+                            status: row['status'],
+                            items: []
                         };
                     }
                     acc[ppNumber].items.push({
-                        partCode: row['partcode'], productName: row['productname'], model: row['model'], maker: row['maker'], quantity: parseInt(row['quantity'], 10) || 0, price: parseFloat(row['price']) || 0, poNumber: row['ponumber'], poDate: row['podate'], aoName: row['aoname'], lpbNumber: row['lpbnumber'], lpbDate: row['lpbdate'],
+                        partCode: row['partcode'],
+                        productName: row['productname'],
+                        model: row['model'],
+                        maker: row['maker'],
+                        quantity: parseInt(row['quantity'], 10) || 0,
+                        price: parseFloat(row['price']) || 0,
+                        poNumber: row['ponumber'],
+                        poDate: row['podate'],
+                        aoName: row['aoname'],
+                        lpbNumber: row['lpbnumber'],
+                        lpbDate: row['lpbdate'],
                     });
                     return acc;
                 }, {});
@@ -310,4 +327,3 @@ document.addEventListener('DOMContentLoaded', () => {
     syncIconWithTheme();
     checkSidebarState();
 });
-

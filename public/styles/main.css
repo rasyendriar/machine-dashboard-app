@@ -181,8 +181,8 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 
 /* STICKY HEADER & COLUMN FIX */
 .table-container {
-    max-height: 65vh; /* This creates the bounded, scrollable box */
-    overflow: auto;   /* This enables both vertical and horizontal scrolling */
+    max-height: 65vh; 
+    overflow: auto;   
 }
 .sticky-header th { 
     position: sticky; 
@@ -271,12 +271,14 @@ html.dark .form-btn-secondary:hover {
     padding: 0.75rem 1.5rem;
     text-align: left;
     font-size: 0.75rem;
-    font-weight: 600; /* Increased font weight */
+    font-weight: 600; 
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-secondary-light);
+    background-color: var(--header-light); /* ADDED THIS LINE */
 }
 html.dark .table-header {
     color: var(--text-secondary-dark);
+    background-color: var(--header-dark); /* ADDED THIS LINE */
 }
 

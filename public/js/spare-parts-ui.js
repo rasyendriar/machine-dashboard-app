@@ -167,23 +167,23 @@ const renderTable = () => {
         const row = document.createElement('tr');
         row.className = 'fade-in-row';
         row.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.ppNumber || '-'}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.projectName || '-'}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.partCode || '-'}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.productName}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.category}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary text-center">${item.quantity}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-primary font-semibold">${item.status}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${formatDate(item.poDate)}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600 dark:text-indigo-400">${formatCurrency((item.price || 0) * (item.quantity || 0))}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${formatDate(item.lastUpdated)}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium sticky-col-right">
+            <td data-label="PP Number" class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.ppNumber || '-'}</td>
+            <td data-label="Project Name" class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.projectName || '-'}</td>
+            <td data-label="Part Code" class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.partCode || '-'}</td>
+            <td data-label="Product Name" class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.productName}</td>
+            <td data-label="Category" class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${item.category}</td>
+            <td data-label="Qty" class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary text-center">${item.quantity}</td>
+            <td data-label="Status" class="px-6 py-4 whitespace-nowrap text-sm themed-text-primary font-semibold">${item.status}</td>
+            <td data-label="PO Date" class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${formatDate(item.poDate)}</td>
+            <td data-label="Total Price" class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600 dark:text-indigo-400">${formatCurrency((item.price || 0) * (item.quantity || 0))}</td>
+            <td data-label="Last Updated" class="px-6 py-4 whitespace-nowrap text-sm themed-text-secondary">${formatDate(item.lastUpdated)}</td>
+            <td data-label="Actions" class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium sticky-col-right">
                 <div class="flex justify-center items-center gap-4">
                      <span class="admin-only-inline-flex gap-4">
-                        <button data-action="edit" data-id="${item.id}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300" title="Edit">
+                        <button data-action="edit" data-id="${item.id}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300" title="Edit" aria-label="Edit Spare Part">
                             <i data-lucide="edit" class="w-5 h-5"></i>
                         </button>
-                        <button data-action="delete" data-id="${item.id}" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete">
+                        <button data-action="delete" data-id="${item.id}" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete" aria-label="Delete Spare Part">
                             <i data-lucide="trash-2" class="w-5 h-5"></i>
                         </button>
                     </span>

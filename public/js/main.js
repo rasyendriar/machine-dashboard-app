@@ -14,7 +14,7 @@ import { listenForSpareParts, batchSaveSpareParts } from './spare-parts-store.js
 import { 
     initializeSparePartsUI, 
     updateSparePartsUI, 
-    handleMachineDelete, 
+    handleSparePartDelete, 
     redrawSparePartsDashboard, 
     exportSparePartsToXLSX, 
     exportSparePartsToPDF,

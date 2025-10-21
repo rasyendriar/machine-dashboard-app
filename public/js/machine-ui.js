@@ -366,6 +366,7 @@ const handleTableClick = (e) => {
         cancelEditBtn.classList.remove('hidden');
         calculateTotal();
         form.scrollIntoView({ behavior: 'smooth' });
+        form['machine-no-drawing'].focus();
 
     } else if (action === 'delete') {
         const item = allPurchases.find(p => p.id === id);
@@ -523,4 +524,5 @@ export const getAllPurchases = () => {
 export const redrawMachineDashboard = () => {
     updateDashboard();
 };
+
 

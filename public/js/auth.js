@@ -7,9 +7,6 @@ const loginSection = document.getElementById('login-section');
 const appSection = document.getElementById('app-section');
 const loginForm = document.getElementById('login-form');
 const logoutBtn = document.getElementById('logout-btn');
-const loginBtn = document.getElementById('login-btn');
-const loginBtnText = document.getElementById('login-btn-text');
-
 
 /**
  * Sets up the UI based on the user's role.
@@ -28,12 +25,20 @@ const setupUIForRole = (role) => {
  */
 const handleLogin = async (e) => {
     e.preventDefault();
+    
+    // Get button elements inside the handler to ensure they exist.
+    const loginButton = loginForm.querySelector('button[type="submit"]');
+    const loginBtnText = document.getElementById('login-btn-text');
+    const loginSpinner = document.getElementById('login-spinner');
+    
     const email = loginForm.username.value;
     const password = loginForm.password.value;
     const loginError = document.getElementById('login-error');
 
-    loginBtn.disabled = true;
+    // Disable button and show spinner
+    loginButton.disabled = true;
     loginBtnText.textContent = 'Logging in...';
+    loginSpinner.classList.remove('hidden');
 
     try {
         await signInWithEmailAndPassword(auth, email, password);
@@ -43,8 +48,10 @@ const handleLogin = async (e) => {
         loginError.classList.remove('hidden');
         showToast('Invalid email or password.', 'error');
     } finally {
-        loginBtn.disabled = false;
+        // Re-enable button and hide spinner regardless of outcome
+        loginButton.disabled = false;
         loginBtnText.textContent = 'Login';
+        loginSpinner.classList.add('hidden');
     }
 };
 

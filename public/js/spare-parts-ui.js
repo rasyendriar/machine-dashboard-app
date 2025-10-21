@@ -516,8 +516,11 @@ const handleFileImport = (event) => {
                 return;
             }
 
-            const headers = jsonData[0].map(h => h.trim().toLowerCase());
-            const dataRows = jsonData.slice(1);
+            const headers = jsonData[0].map(h => String(h || '').trim().toLowerCase());
+            let dataRows = jsonData.slice(1);
+            
+            // Filter out empty rows before processing
+            dataRows = dataRows.filter(row => row.some(cell => cell !== null && cell !== undefined && cell !== ''));
 
             parsedImportData = dataRows.map(row => {
                 const rowData = {};
@@ -526,9 +529,23 @@ const handleFileImport = (event) => {
                     rowData[key] = row[index];
                 });
                 return rowData;
+            }).filter(item => {
+                // Ensure that we only process items that have a product name
+                return item.productname && String(item.productname).trim() !== '';
             });
 
-            displayImportPreview(headers, dataRows);
+            if (parsedImportData.length === 0) {
+                 showToast("No valid data found in the file. Make sure the 'productname' column is filled.", "error");
+                 return;
+            }
+
+            // We need to pass the original headers and the *filtered* data rows for the preview
+            const validDataRowsForPreview = parsedImportData.map(parsedRow => {
+                 return headers.map(header => parsedRow[header.replace(/\s+/g, '')] || '');
+            });
+
+            displayImportPreview(headers, validDataRowsForPreview);
+
         } catch (error) {
             console.error("Error reading file:", error);
             showToast("Failed to read or parse the file.", "error");
@@ -596,7 +613,11 @@ export const initializeSparePartsUI = () => {
     });
 
     // Event listener for the file input change.
-    importFileInput.addEventListener('change', handleFileImport);
+    importFileInput.addEventListener('change', (e) => {
+        if (document.getElementById('import-modal-title').textContent.includes('Spare Part')) {
+            handleFileImport(e);
+        }
+    });
 
 
     resetForm();
@@ -635,4 +656,3 @@ export const resetImportModal = () => {
     importPreviewTable.innerHTML = '';
     parsedImportData = [];
 };
-

@@ -6,7 +6,8 @@ import {
     updateDoc,
     deleteDoc,
     doc,
-    serverTimestamp
+    serverTimestamp,
+    writeBatch
 } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 import { db } from "./firebase-config.js";
 
@@ -30,7 +31,7 @@ export const listenForSpareParts = (callback) => {
 };
 
 /**
- * Saves a spare part record (adds or updates).
+ * Saves a single spare part record (adds or updates).
  * @param {string|null} id - The document ID to update, or null to add.
  * @param {object} partData - The data for the record.
  * @returns {Promise<void>}
@@ -56,4 +57,26 @@ export const saveSparePart = (id, partData) => {
  */
 export const deleteSparePart = (id) => {
     return deleteDoc(doc(db, "spareParts", id));
+};
+
+/**
+ * Saves a batch of spare part records to Firestore.
+ * @param {Array<object>} parts - An array of spare part objects to save.
+ * @returns {Promise<void>}
+ */
+export const batchSaveSpareParts = async (parts) => {
+    const batch = writeBatch(db);
+
+    parts.forEach(partData => {
+        // For each new record, create a new document reference in the "spareParts" collection
+        const docRef = doc(collection(db, "spareParts"));
+        const dataWithTimestamp = {
+            ...partData,
+            lastUpdated: serverTimestamp()
+        };
+        batch.set(docRef, dataWithTimestamp);
+    });
+
+    // Commit the batch
+    return batch.commit();
 };

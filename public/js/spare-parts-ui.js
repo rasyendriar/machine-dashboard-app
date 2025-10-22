@@ -1,5 +1,5 @@
 import { formatCurrency, showToast, formatDate } from './utils.js';
-import { saveSparePart, deleteSparePart } from './spare-parts-store.js';
+import { saveSparePart, deleteSparePart, updateSparePartItem } from './spare-parts-store.js';
 // Import Firestore functions needed for item deletion
 import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 import { db } from "./firebase-config.js";
@@ -28,6 +28,11 @@ const customAlert = document.getElementById('custom-alert');
 const alertCancelBtn = document.getElementById('alert-cancel');
 const alertMessage = document.getElementById('alert-message');
 const alertTitle = document.getElementById('alert-title');
+
+const editItemModal = document.getElementById('edit-item-modal');
+const editItemForm = document.getElementById('edit-item-form');
+const closeEditItemModalBtn = document.getElementById('close-edit-item-modal');
+const cancelEditItemBtn = document.getElementById('cancel-edit-item-btn');
 
 // Import Modal Elements (shared across modules, handled in main.js)
 const importModal = document.getElementById('import-modal');
@@ -193,7 +198,7 @@ const renderTable = () => {
             <td data-label="Actions" class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium sticky-col-right">
                 <div class="flex justify-center items-center gap-4">
                      <span class="admin-only-inline-flex gap-4">
-                        <button data-action="edit" data-id="${item.id}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300" title="Edit" aria-label="Edit Spare Part">
+                        <button data-action="edit" data-id="${item.id}" data-item-index="${item.itemIndex}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300" title="Edit Item" aria-label="Edit Spare Part Item">
                             <i data-lucide="edit" class="w-5 h-5"></i>
                         </button>
                         <button data-action="delete" data-id="${item.id}" data-item-index="${item.itemIndex}" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete" aria-label="Delete Spare Part">
@@ -456,26 +461,33 @@ const handleTableClick = (e) => {
     if (!action || !id) return;
     
     if (action === 'edit') {
-        // Find the parent part document
         const part = allParts.find(p => p.id === id);
-        if (!part) return;
+        const item = part?.items[parseInt(itemIndex, 10)];
+
+        if (!part || !item) {
+            showToast('Could not find the item to edit.', 'error');
+            return;
+        }
+
+        // Populate the new edit modal
+        editItemForm.querySelector('[name="partCode"]').value = item.partCode || '';
+        editItemForm.querySelector('[name="productName"]').value = item.productName || '';
+        editItemForm.querySelector('[name="model"]').value = item.model || '';
+        editItemForm.querySelector('[name="maker"]').value = item.maker || '';
+        editItemForm.querySelector('[name="quantity"]').value = item.quantity || 1;
+        editItemForm.querySelector('[name="price"]').value = item.price || 0;
+        editItemForm.querySelector('[name="poNumber"]').value = item.poNumber || '';
+        editItemForm.querySelector('[name="poDate"]').value = item.poDate || '';
+        editItemForm.querySelector('[name="aoName"]').value = item.aoName || '';
+        editItemForm.querySelector('[name="lpbNumber"]').value = item.lpbNumber || '';
+        editItemForm.querySelector('[name="lpbDate"]').value = item.lpbDate || '';
         
-        editIdInput.value = id;
-        form['spare-part-project-name'].value = part.projectName || '';
-        form['spare-part-machine-name'].value = part.machineName || '';
-        form['spare-part-category'].value = part.category || 'Mechanical';
-        form['spare-part-status'].value = part.status || 'Approval';
-        form['spare-part-pp-number'].value = part.ppNumber || '';
-        form['spare-part-pp-date'].value = part.ppDate || '';
-        
-        partItemsContainer.innerHTML = '';
-        part.items.forEach(item => createPartItemRow(item));
-        
-        document.getElementById('spare-part-form-title').textContent = 'Edit Spare Part Purchase';
-        submitBtnText.textContent = 'Update Purchase';
-        cancelEditBtn.classList.remove('hidden');
-        form.scrollIntoView({ behavior: 'smooth' });
-        form['spare-part-pp-number'].focus();
+        // Store IDs for submission
+        editItemForm.querySelector('#edit-item-doc-id').value = id;
+        editItemForm.querySelector('#edit-item-index').value = itemIndex;
+
+        // Show the modal
+        editItemModal.classList.remove('hidden');
         
     } else if (action === 'delete') {
         const part = allParts.find(p => p.id === id);
@@ -493,6 +505,43 @@ const handleTableClick = (e) => {
         alertMessage.textContent = `Anda yakin ingin menghapus item '${item.productName}' dari PP ${part.ppNumber}? Anda juga bisa menghapus seluruh data untuk PP ini.`;
         
         customAlert.classList.remove('hidden');
+    }
+};
+
+const handleEditItemFormSubmit = async (e) => {
+    e.preventDefault();
+    
+    const docId = editItemForm.querySelector('#edit-item-doc-id').value;
+    const itemIndex = parseInt(editItemForm.querySelector('#edit-item-index').value, 10);
+    
+    const productName = editItemForm.querySelector('[name="productName"]').value;
+    if (!productName) {
+        showToast('Product Name is a required field.', 'error');
+        return;
+    }
+
+    const updatedItemData = {
+        partCode: editItemForm.querySelector('[name="partCode"]').value,
+        productName: productName,
+        model: editItemForm.querySelector('[name="model"]').value,
+        maker: editItemForm.querySelector('[name="maker"]').value,
+        quantity: parseInt(editItemForm.querySelector('[name="quantity"]').value, 10) || 0,
+        price: parseFloat(editItemForm.querySelector('[name="price"]').value) || 0,
+        poNumber: editItemForm.querySelector('[name="poNumber"]').value,
+        poDate: editItemForm.querySelector('[name="poDate"]').value,
+        aoName: editItemForm.querySelector('[name="aoName"]').value,
+        lpbNumber: editItemForm.querySelector('[name="lpbNumber"]').value,
+        lpbDate: editItemForm.querySelector('[name="lpbDate"]').value,
+    };
+
+    try {
+        await updateSparePartItem(docId, itemIndex, updatedItemData);
+        showToast('Item updated successfully!');
+        editItemModal.classList.add('hidden');
+        editItemForm.reset();
+    } catch (error) {
+        console.error("Error updating item:", error);
+        showToast('Failed to update item. See console for details.', 'error');
     }
 };
 
@@ -693,6 +742,11 @@ export const initializeSparePartsUI = () => {
         }
     });
 
+    // Add listeners for the new edit item modal
+    editItemForm.addEventListener('submit', handleEditItemFormSubmit);
+    closeEditItemModalBtn.addEventListener('click', () => editItemModal.classList.add('hidden'));
+    cancelEditItemBtn.addEventListener('click', () => editItemModal.classList.add('hidden'));
+
 
     resetForm();
 };
@@ -730,4 +784,3 @@ export const resetImportModal = () => {
     importPreviewTable.innerHTML = '';
     parsedImportData = [];
 };
-

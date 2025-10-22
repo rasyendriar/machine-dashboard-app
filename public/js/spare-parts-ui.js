@@ -92,9 +92,18 @@ const createPartItemRow = (item = {}) => {
                 <label class="block text-sm font-medium themed-text-secondary">Price</label>
                 <input type="number" name="price" min="0" class="themed-input mt-1 block w-full part-price" value="${item.price || 0}">
             </div>
-            <div class="lg:col-span-2 themed-inset-panel p-3 rounded-lg">
+            <div class="themed-inset-panel p-3 rounded-lg">
                  <label class="block text-sm font-medium themed-text-secondary">Total Price</label>
                  <p class="text-xl font-bold themed-text-primary mt-1 part-total-price">${formatCurrency((item.quantity || 1) * (item.price || 0))}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium themed-text-secondary">Status</label>
+                <select name="status" class="themed-input mt-1 block w-full">
+                    <option ${ (item.status === 'Approval') ? 'selected' : '' }>Approval</option>
+                    <option ${ (item.status === 'PO') ? 'selected' : '' }>PO</option>
+                    <option ${ (item.status === 'PP') ? 'selected' : '' }>PP</option>
+                    <option ${ (item.status === 'Incoming') ? 'selected' : '' }>Incoming</option>
+                </select>
             </div>
              <div>
                 <label class="block text-sm font-medium themed-text-secondary">PO Number</label>
@@ -226,20 +235,25 @@ const updateDashboard = () => {
     };
 
     allParts.forEach(p => {
+        // Track unique projects
+        if (p.projectName) stats.projectValues[p.projectName] = stats.projectValues[p.projectName] || 0;
+        
+        // Track PP by category
+        if (p.category in stats.categoryCounts) {
+            stats.categoryCounts[p.category]++;
+        }
+
         p.items.forEach(item => {
             const value = (item.price || 0) * (item.quantity || 0);
             stats.totalValue += value;
             if (p.projectName) {
-                if (!stats.projectValues[p.projectName]) stats.projectValues[p.projectName] = 0;
                 stats.projectValues[p.projectName] += value;
             }
+            // Count status from each item
+            if (item.status in stats.statusCounts) {
+                stats.statusCounts[item.status]++;
+            }
         });
-        if (p.category in stats.categoryCounts) {
-            stats.categoryCounts[p.category]++;
-        }
-        if (p.status in stats.statusCounts) {
-            stats.statusCounts[p.status]++;
-        }
     });
 
     keyMetricsContainer.innerHTML = `
@@ -312,7 +326,7 @@ export const exportSparePartsToXLSX = () => {
                 "Project Name": p.projectName || "",
                 "Machine Name": p.machineName || "",
                 "Category": p.category || "",
-                "Status": p.status || "",
+                "Status": item.status || "", // Get status from item
                 "Part Code": item.partCode || "",
                 "Product Name": item.productName || "",
                 "Model": item.model || "",
@@ -362,7 +376,7 @@ export const exportSparePartsToPDF = () => {
                 item.productName,
                 p.category,
                 item.quantity,
-                p.status,
+                item.status, // Get status from item
                 formatCurrency((item.price || 0) * (item.quantity || 0))
             ];
             tableRows.push(itemData);
@@ -414,6 +428,7 @@ const handleFormSubmit = async (e) => {
             maker: row.querySelector('[name="maker"]').value,
             quantity: parseInt(row.querySelector('[name="quantity"]').value, 10) || 0,
             price: parseFloat(row.querySelector('[name="price"]').value) || 0,
+            status: row.querySelector('[name="status"]').value, // Get status from the row
             poNumber: row.querySelector('[name="poNumber"]').value,
             poDate: row.querySelector('[name="poDate"]').value,
             aoName: row.querySelector('[name="aoName"]').value,
@@ -433,7 +448,6 @@ const handleFormSubmit = async (e) => {
         projectName: form['spare-part-project-name'].value,
         machineName: form['spare-part-machine-name'].value,
         category: form['spare-part-category'].value,
-        status: form['spare-part-status'].value,
         ppNumber: form['spare-part-pp-number'].value,
         ppDate: form['spare-part-pp-date'].value,
         items: items
@@ -476,6 +490,7 @@ const handleTableClick = (e) => {
         editItemForm.querySelector('[name="maker"]').value = item.maker || '';
         editItemForm.querySelector('[name="quantity"]').value = item.quantity || 1;
         editItemForm.querySelector('[name="price"]').value = item.price || 0;
+        editItemForm.querySelector('[name="status"]').value = item.status || 'Approval'; // Set status dropdown
         editItemForm.querySelector('[name="poNumber"]').value = item.poNumber || '';
         editItemForm.querySelector('[name="poDate"]').value = item.poDate || '';
         editItemForm.querySelector('[name="aoName"]').value = item.aoName || '';
@@ -527,6 +542,7 @@ const handleEditItemFormSubmit = async (e) => {
         maker: editItemForm.querySelector('[name="maker"]').value,
         quantity: parseInt(editItemForm.querySelector('[name="quantity"]').value, 10) || 0,
         price: parseFloat(editItemForm.querySelector('[name="price"]').value) || 0,
+        status: editItemForm.querySelector('[name="status"]').value, // Get status from edit form
         poNumber: editItemForm.querySelector('[name="poNumber"]').value,
         poDate: editItemForm.querySelector('[name="poDate"]').value,
         aoName: editItemForm.querySelector('[name="aoName"]').value,
@@ -784,3 +800,4 @@ export const resetImportModal = () => {
     importPreviewTable.innerHTML = '';
     parsedImportData = [];
 };
+

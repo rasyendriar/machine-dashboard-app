@@ -1,5 +1,8 @@
 import { formatCurrency, showToast, formatDate } from './utils.js';
 import { saveSparePart, deleteSparePart } from './spare-parts-store.js';
+// Import Firestore functions needed for item deletion
+import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+import { db } from "./firebase-config.js";
 
 // --- CHART INSTANCES ---
 let sparePartsStatusPieChart = null;
@@ -42,7 +45,8 @@ const barChartCanvas = document.getElementById('spare-parts-project-value-bar-ch
 
 // --- STATE ---
 let allParts = [];
-let itemToDeleteId = null;
+// itemToDeleteId might become redundant, but keep for now. Use modal data attributes.
+let itemToDeleteId = null; 
 let parsedImportData = []; // To hold data from the imported file for confirmation
 
 // --- PRIVATE FUNCTIONS ---
@@ -146,10 +150,11 @@ const renderTable = () => {
     const filterCategory = filterCategorySelect.value;
 
     let flatData = [];
+    // Modify the loop to include item index
     allParts.forEach(part => {
-        part.items.forEach(item => {
-            // Add the top-level lastUpdated field to each flattened item
-            flatData.push({ ...item, ...part, id: part.id, lastUpdated: part.lastUpdated });
+        part.items.forEach((item, index) => {
+            // Add the top-level lastUpdated field and itemIndex to each flattened item
+            flatData.push({ ...item, ...part, id: part.id, lastUpdated: part.lastUpdated, itemIndex: index });
         });
     });
 
@@ -191,7 +196,7 @@ const renderTable = () => {
                         <button data-action="edit" data-id="${item.id}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300" title="Edit" aria-label="Edit Spare Part">
                             <i data-lucide="edit" class="w-5 h-5"></i>
                         </button>
-                        <button data-action="delete" data-id="${item.id}" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete" aria-label="Delete Spare Part">
+                        <button data-action="delete" data-id="${item.id}" data-item-index="${item.itemIndex}" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete" aria-label="Delete Spare Part">
                             <i data-lucide="trash-2" class="w-5 h-5"></i>
                         </button>
                     </span>
@@ -447,10 +452,11 @@ const handleTableClick = (e) => {
     const button = e.target.closest('button');
     if (!button) return;
 
-    const { action, id } = button.dataset;
+    const { action, id, itemIndex } = button.dataset; // Get itemIndex
     if (!action || !id) return;
     
     if (action === 'edit') {
+        // Find the parent part document
         const part = allParts.find(p => p.id === id);
         if (!part) return;
         
@@ -473,28 +479,85 @@ const handleTableClick = (e) => {
         
     } else if (action === 'delete') {
         const part = allParts.find(p => p.id === id);
-        if (!part) return;
-        itemToDeleteId = id;
-        alertTitle.textContent = `Delete PP '${part.ppNumber}'?`;
-        alertMessage.textContent = `Are you sure you want to delete the entire record for PP ${part.ppNumber}? This will remove all ${part.items.length} part(s) associated with it. This action cannot be undone.`;
+        // Find the specific item using itemIndex
+        const item = part?.items[itemIndex]; 
+        
+        if (!part || item === undefined) return;
+
+        // Store both partId and itemIndex in the modal's dataset
+        customAlert.dataset.partId = id;
+        customAlert.dataset.itemIndex = itemIndex;
+
+        // Update modal text
+        alertTitle.textContent = `Hapus Item '${item.productName}'?`;
+        alertMessage.textContent = `Anda yakin ingin menghapus item '${item.productName}' dari PP ${part.ppNumber}? Anda juga bisa menghapus seluruh data untuk PP ini.`;
+        
         customAlert.classList.remove('hidden');
     }
 };
 
-export const handleSparePartDelete = async () => {
-    if (itemToDeleteId) {
-        try {
-            await deleteSparePart(itemToDeleteId);
-            showToast('Item deleted successfully.');
-        } catch (error) {
-            console.error("Error deleting spare part:", error);
-            showToast('Failed to delete item.', 'error');
-        } finally {
-            itemToDeleteId = null;
-            customAlert.classList.add('hidden');
+/**
+ * Handles the deletion process based on user choice.
+ * @param {'item' | 'pp'} deleteType - Whether to delete a single 'item' or the entire 'pp' document.
+ */
+export const handleSparePartDelete = async (deleteType) => {
+    // Retrieve partId and itemIndex from the modal's dataset
+    const partId = customAlert.dataset.partId;
+    const itemIndex = parseInt(customAlert.dataset.itemIndex, 10); // Ensure it's a number
+
+    if (!partId) return; // Should not happen if modal is opened correctly
+
+    try {
+        if (deleteType === 'item') {
+            if (isNaN(itemIndex)) { // Check if itemIndex is valid
+                throw new Error("Invalid item index for deletion.");
+            }
+
+            const docRef = doc(db, "spareParts", partId);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                let currentData = docSnap.data();
+                let items = currentData.items || [];
+
+                // Check if the index is valid for the current items array
+                if (itemIndex >= 0 && itemIndex < items.length) {
+                    const deletedItemName = items[itemIndex].productName; // Get name for toast message
+                    items.splice(itemIndex, 1); // Remove the item
+
+                    // If items array is now empty, delete the whole document
+                    if (items.length === 0) {
+                        await deleteSparePart(partId); // Use the existing function
+                        showToast(`Item '${deletedItemName}' dihapus. Seluruh PP ${currentData.ppNumber} juga dihapus karena kosong.`);
+                    } else {
+                        // Otherwise, update the document with the modified items array
+                        await updateDoc(docRef, { items: items });
+                        showToast(`Item '${deletedItemName}' dari PP ${currentData.ppNumber} berhasil dihapus.`);
+                    }
+                } else {
+                    throw new Error(`Item index ${itemIndex} is out of bounds.`);
+                }
+            } else {
+                throw new Error("Document not found.");
+            }
+        } else if (deleteType === 'pp') {
+            // Find part to get PP number for toast message
+            const part = allParts.find(p => p.id === partId);
+            const ppNumber = part ? part.ppNumber : 'unknown';
+            await deleteSparePart(partId); // Use existing function to delete the whole doc
+            showToast(`Seluruh data untuk PP ${ppNumber} berhasil dihapus.`);
         }
+    } catch (error) {
+        console.error("Error during deletion:", error);
+        showToast(`Gagal menghapus: ${error.message}`, 'error');
+    } finally {
+        // Reset modal dataset and hide it
+        customAlert.dataset.partId = '';
+        customAlert.dataset.itemIndex = '';
+        customAlert.classList.add('hidden');
     }
 };
+
 
 /**
  * Handles the file import process.
@@ -509,7 +572,8 @@ const handleFileImport = (event) => {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, { type: 'array' });
             const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-            const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+            // Use { defval: "" } to ensure empty cells become empty strings
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: "" }); 
 
             if (jsonData.length < 2) {
                 showToast("The file is empty or has no data rows.", "error");
@@ -519,32 +583,39 @@ const handleFileImport = (event) => {
             const headers = jsonData[0].map(h => String(h || '').trim().toLowerCase());
             let dataRows = jsonData.slice(1);
             
-            // Filter out empty rows before processing
-            dataRows = dataRows.filter(row => row.some(cell => cell !== null && cell !== undefined && cell !== ''));
+            // Filter out rows where all cells are empty strings
+            dataRows = dataRows.filter(row => row.some(cell => cell !== ""));
 
             parsedImportData = dataRows.map(row => {
                 const rowData = {};
                 headers.forEach((header, index) => {
-                    const key = header.replace(/\s+/g, ''); // "PP Number" -> "ppnumber"
+                    // Sanitize header key: remove spaces and convert to lowercase
+                    const key = header.replace(/\s+/g, '').toLowerCase(); 
                     rowData[key] = row[index];
                 });
                 return rowData;
             }).filter(item => {
-                // Ensure that we only process items that have a product name
-                return item.productname && String(item.productname).trim() !== '';
+                 // Ensure we only process items that have a product name (after sanitizing key)
+                 const productNameKey = 'productname'; // Key after sanitization
+                 return item[productNameKey] && String(item[productNameKey]).trim() !== '';
             });
 
             if (parsedImportData.length === 0) {
-                 showToast("No valid data found in the file. Make sure the 'productname' column is filled.", "error");
+                 showToast("No valid data found in the file. Make sure the 'productname' column is filled and rows are not empty.", "error");
                  return;
             }
 
-            // We need to pass the original headers and the *filtered* data rows for the preview
+            // Generate rows for preview based on the filtered parsed data
             const validDataRowsForPreview = parsedImportData.map(parsedRow => {
-                 return headers.map(header => parsedRow[header.replace(/\s+/g, '')] || '');
+                 // Map back using original headers (unsanitized) for correct column order
+                 return jsonData[0].map(originalHeader => {
+                     const sanitizedKey = String(originalHeader || '').trim().toLowerCase().replace(/\s+/g, '');
+                     return parsedRow[sanitizedKey] || ''; // Use sanitized key to get value
+                 });
             });
 
-            displayImportPreview(headers, validDataRowsForPreview);
+            // Pass original headers for display
+            displayImportPreview(jsonData[0].map(h => String(h || '').trim()), validDataRowsForPreview);
 
         } catch (error) {
             console.error("Error reading file:", error);
@@ -559,8 +630,8 @@ const handleFileImport = (event) => {
 
 /**
  * Displays a preview of the imported data in the modal.
- * @param {Array<string>} headers - The column headers.
- * @param {Array<Array<any>>} dataRows - The data rows.
+ * @param {Array<string>} headers - The column headers (original from file).
+ * @param {Array<Array<any>>} dataRows - The filtered data rows for preview.
  */
 const displayImportPreview = (headers, dataRows) => {
     let tableHTML = `<table class="min-w-full divide-y themed-border">
@@ -572,7 +643,8 @@ const displayImportPreview = (headers, dataRows) => {
     dataRows.forEach(row => {
         tableHTML += `<tr>`;
         row.forEach(cell => {
-            tableHTML += `<td class="px-4 py-2 whitespace-nowrap text-sm themed-text-secondary">${cell || ''}</td>`;
+            // Display empty string for null/undefined, otherwise the cell value
+            tableHTML += `<td class="px-4 py-2 whitespace-nowrap text-sm themed-text-secondary">${cell ?? ''}</td>`;
         });
         tableHTML += `</tr>`;
     });
@@ -608,11 +680,13 @@ export const initializeSparePartsUI = () => {
     });
 
     alertCancelBtn.addEventListener('click', () => {
-        itemToDeleteId = null;
+        // Clear dataset on cancel
+        customAlert.dataset.partId = '';
+        customAlert.dataset.itemIndex = '';
         customAlert.classList.add('hidden');
     });
 
-    // Event listener for the file input change.
+    // Event listener for the file input change, checking modal title
     importFileInput.addEventListener('change', (e) => {
         if (document.getElementById('import-modal-title').textContent.includes('Spare Part')) {
             handleFileImport(e);
@@ -656,3 +730,4 @@ export const resetImportModal = () => {
     importPreviewTable.innerHTML = '';
     parsedImportData = [];
 };
+

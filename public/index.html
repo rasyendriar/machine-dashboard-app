@@ -230,7 +230,6 @@
                                             <option>Tools</option>
                                         </select>
                                     </div>
-                                    <div><label for="spare-part-status" class="block text-sm font-medium themed-text-secondary">Status</label><select id="spare-part-status" name="spare-part-status" class="themed-input mt-1 block w-full"><option>Approval</option><option>PO</option><option>PP</option><option>Incoming</option></select></div>
                                     <div><label for="spare-part-pp-date" class="block text-sm font-medium themed-text-secondary">PP Date</label><input type="date" id="spare-part-pp-date" name="spare-part-pp-date" class="themed-input mt-1 block w-full"></div>
                                 </div>
                                 <div id="part-items-container" class="space-y-4"></div>
@@ -310,7 +309,7 @@
     
     <!-- NEW Edit Item Modal (for spare parts) -->
     <div id="edit-item-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-xl themed-card modal">
+        <div class="relative top-10 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-xl themed-card modal">
              <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-semibold themed-text-primary">Edit Spare Part Item</h3>
                 <button id="close-edit-item-modal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
@@ -320,7 +319,7 @@
             <form id="edit-item-form" class="space-y-4">
                 <input type="hidden" id="edit-item-doc-id">
                 <input type="hidden" id="edit-item-index">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-sm font-medium themed-text-secondary">Part Code Number</label>
                         <input type="text" name="partCode" class="themed-input mt-1 block w-full">
@@ -344,6 +343,15 @@
                     <div>
                         <label class="block text-sm font-medium themed-text-secondary">Price</label>
                         <input type="number" name="price" min="0" class="themed-input mt-1 block w-full">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium themed-text-secondary">Status</label>
+                        <select name="status" class="themed-input mt-1 block w-full">
+                            <option>Approval</option>
+                            <option>PO</option>
+                            <option>PP</option>
+                            <option>Incoming</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium themed-text-secondary">PO Number</label>
@@ -478,3 +486,4 @@
     </script>
 </body>
 </html>
+

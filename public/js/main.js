@@ -310,7 +310,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             projectName: String(row['projectname'] || ''),
                             machineName: String(row['machinename'] || ''),
                             category: String(row['category'] || 'Mechanical'),
-                            status: String(row['status'] || 'Approval'),
                             items: []
                         };
                     }
@@ -321,6 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         maker: String(row['maker'] || ''),
                         quantity: parseInt(row['quantity'], 10) || 0,
                         price: parseFloat(row['price']) || 0,
+                        status: String(row['status'] || 'Approval'), // Get status for each item
                         poNumber: String(row['ponumber'] || ''),
                         poDate: excelDateToJSDate(row['podate']) || null,
                         aoName: String(row['aoname'] || ''),
@@ -369,11 +369,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         noPp: String(row['nopp'] || ''),
                         sphDate: excelDateToJSDate(row['sphdate']) || null,
                         noSph: { text: String(row['nosph'] || ''), link: String(row['sphlink'] || '') }, // Assuming SPH link column might be 'sphlink'
-                        initialQuotation: parseFloat(row['initialquotation']) || 0,
+                        initialQuotation: parseFloat(row['initialquotation'] || row['initialquotationidr']) || 0, // <-- FIX HERE
                         poDate: excelDateToJSDate(row['podate']) || null,
                         poNumber: String(row['ponumber'] || ''),
                         lpbNumber: String(row['lpbnumber'] || ''),
-                        negotiatedQuotation: parseFloat(row['negotiatedquotation'] || row['quotationafternegotiation']) || 0,
+                        negotiatedQuotation: parseFloat(row['negotiatedquotation'] || row['quotationafternegotiation'] || row['quotationafternegotiationidr']) || 0, // <-- FIX HERE
                         drawingImgUrl: null // As requested previously
                     };
                 }).filter(Boolean); // Remove null entries (invalid rows)
@@ -423,4 +423,3 @@ document.addEventListener('DOMContentLoaded', () => {
     syncIconWithTheme();
     checkSidebarState();
 });
-

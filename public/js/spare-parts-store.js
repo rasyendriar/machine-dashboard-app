@@ -134,6 +134,7 @@ export const batchSaveSpareParts = async (parts) => {
                 const key = (newItem.partCode || newItem.productName || '').toLowerCase();
                 if (key && existingItemsMap.has(key)) {
                     // If item exists, update it by merging new data into the old
+                    // This will correctly update the item's status if it's in newItem
                     const foundItem = existingItemsMap.get(key);
                     existingItems[foundItem.originalIndex] = { ...foundItem, ...newItem };
                 } else if (key) {
@@ -145,6 +146,11 @@ export const batchSaveSpareParts = async (parts) => {
             // Add the update operation to the batch
             batch.update(existingDocRef, { 
                 items: existingItems,
+                // Also update top-level fields if they are provided in the import
+                projectName: partData.projectName || existingDoc.data().projectName,
+                machineName: partData.machineName || existingDoc.data().machineName,
+                category: partData.category || existingDoc.data().category,
+                ppDate: partData.ppDate || existingDoc.data().ppDate,
                 lastUpdated: serverTimestamp()
             });
 

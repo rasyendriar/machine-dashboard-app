@@ -8,7 +8,9 @@ import {
     doc,
     serverTimestamp,
     writeBatch,
-    getDoc
+    getDoc,
+    where,
+    getDocs
 } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 import { db } from "./firebase-config.js";
 
@@ -96,23 +98,69 @@ export const deleteSparePart = (id) => {
 };
 
 /**
- * Saves a batch of spare part records to Firestore.
- * @param {Array<object>} parts - An array of spare part objects to save.
+ * Saves a batch of spare part records to Firestore, either by creating new documents
+ * or updating existing ones (upsert).
+ * @param {Array<object>} parts - An array of spare part purchase objects to save.
  * @returns {Promise<void>}
  */
 export const batchSaveSpareParts = async (parts) => {
     const batch = writeBatch(db);
+    const sparePartsRef = collection(db, "spareParts");
 
-    parts.forEach(partData => {
-        // For each new record, create a new document reference in the "spareParts" collection
-        const docRef = doc(collection(db, "spareParts"));
-        const dataWithTimestamp = {
-            ...partData,
-            lastUpdated: serverTimestamp()
-        };
-        batch.set(docRef, dataWithTimestamp);
-    });
+    // Use Promise.all to handle all async checks before committing the batch
+    await Promise.all(parts.map(async (partData) => {
+        // Query for an existing document with the same PP Number
+        const q = query(sparePartsRef, where("ppNumber", "==", partData.ppNumber));
+        const querySnapshot = await getDocs(q);
 
-    // Commit the batch
+        if (!querySnapshot.empty) {
+            // --- UPDATE LOGIC ---
+            // An existing document with this PP Number was found.
+            const existingDoc = querySnapshot.docs[0];
+            const existingDocRef = existingDoc.ref;
+            let existingItems = existingDoc.data().items || [];
+
+            // Create a Map for efficient lookup of existing items by a unique key (partCode or productName)
+            const existingItemsMap = new Map();
+            existingItems.forEach((item, index) => {
+                const key = (item.partCode || item.productName || '').toLowerCase();
+                if (key) {
+                   existingItemsMap.set(key, { ...item, originalIndex: index });
+                }
+            });
+
+            // Iterate through the new items from the imported file
+            partData.items.forEach(newItem => {
+                const key = (newItem.partCode || newItem.productName || '').toLowerCase();
+                if (key && existingItemsMap.has(key)) {
+                    // If item exists, update it by merging new data into the old
+                    const foundItem = existingItemsMap.get(key);
+                    existingItems[foundItem.originalIndex] = { ...foundItem, ...newItem };
+                } else if (key) {
+                    // If item is new for this PP, add it to the array
+                    existingItems.push(newItem);
+                }
+            });
+
+            // Add the update operation to the batch
+            batch.update(existingDocRef, { 
+                items: existingItems,
+                lastUpdated: serverTimestamp()
+            });
+
+        } else {
+            // --- INSERT LOGIC ---
+            // No document with this PP Number exists, so create a new one.
+            const newDocRef = doc(sparePartsRef);
+            const dataWithTimestamp = {
+                ...partData,
+                lastUpdated: serverTimestamp()
+            };
+            batch.set(newDocRef, dataWithTimestamp);
+        }
+    }));
+
+    // Commit all the collected writes (updates and sets) to Firestore
     return batch.commit();
 };
+
